@@ -29,25 +29,40 @@ class Load extends Component {
     
   }
 
+  renderVideo() {
+    return this.state.videos.map(video => {
+      return (
+        <video height="200" width="300" controls>
+          <source src={video[1]}/>
+        </video>
+      );
+    })
+  }
+
   render() {
     return (
       <div>
-        <label className="uploader-wrapper" htmlFor="upload-video">
-          <Button variant="contained" 
+        <div id="file-load">
+          <label className="uploader-wrapper" htmlFor="upload-video">
+            <Button variant="contained" 
                 component="span"
                 color="secondary"
                 disabled={this.state.status === 'loaded'}
                 >
-            Load video
-          </Button>
-        </label>
-        <input
-          accept="video/*"
-          style={{display: "None"}}
-          id="upload-video"
-          type="file"
-          onChange={this.handleLoadVideo}
-        />
+              Load video
+            </Button>
+          </label>
+          <input
+            accept="video/*"
+            style={{display: "None"}}
+            id="upload-video"
+            type="file"
+            onChange={this.handleLoadVideo}
+          />
+        </div>
+        <div id="video-render">
+          {this.renderVideo()}
+        </div>
       </div>
     )
   }
