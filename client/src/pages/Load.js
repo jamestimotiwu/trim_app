@@ -2,18 +2,43 @@ import React, { Component } from 'react';
 import {withStyles, Slider, Typography, Button, Input, Grid} from '@material-ui/core';
 import './Load.css';
 
+function VideoThumbComponent(props) {
+  return (
+    <span {...props}>
+      <span className="bar" />
+      <span className="bar" />
+    </span>
+  );
+}
+
 class Load extends Component {
   constructor(props) {
     super(props);   
 
     this.state = {
       videos: [],
+      sliderValue: [0,100],
       status: 'pending'
     };
 
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
+    this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
   }
 
+
+  handleUpdateVideo(event, value) {
+    console.log(value)
+    let newDuration = this.refs.vidRef.duration
+    if (this.state.sliderValue[0] != value[0])
+        newDuration = (value[0]/100) * newDuration
+    else
+        newDuration = (value[1]/100) * newDuration
+    this.refs.vidRef.currentTime = newDuration 
+    console.log(newDuration)
+    this.setState({
+      sliderValue: value
+    });
+  }
 
   handleLoadVideo(event) {
     const videos = []
@@ -33,7 +58,7 @@ class Load extends Component {
   renderVideo() {
     return this.state.videos.map(video => {
       return (
-        <video width="100%" height="auto">
+        <video ref="vidRef" width="100%" height="auto">
           <source src={video[1]}/>
         </video>
       );
@@ -43,27 +68,34 @@ class Load extends Component {
   render() {
     const VideoSlider = withStyles({
       root: {
-        color: '#3a8589',
-        height: 3,
+        color: '#fcc603',
+        height: 6,
         padding: '13px 0',
       },
       thumb: {
-        height: 27,
-        width: 27,
-        backgroundColor: '#fff',
+        height: '27px',
+        width: '27px',
+        backgroundColor: '#fcc603',
         border: '1px solid currentColor',
         marginTop: -12,
         marginLeft: -13,
+        '& .bar': {
+          height: 9,
+          width: 1,
+          backgroundColor: '#000',
+          marginLeft: 1,
+          marginRight: 1,
+        }
       },
       active: {
       },
       track: {
-        height: 3,
+        height: 6,
       },
       rail: {
-        color: 'd8d8d8',
+        color: '#d8d8d8',
         opacity: 1,
-        height: 1,
+        height: 3,
       },
     })(Slider);
 
@@ -96,7 +128,11 @@ class Load extends Component {
             </div>
           </Grid>
           <Grid item xs={12}>
-            <VideoSlider defaultValue={[0, 100]} />
+            <VideoSlider 
+                ThumbComponent={VideoThumbComponent}
+                defaultValue={this.state.sliderValue}     
+                onChangeCommitted={this.handleUpdateVideo}
+            />
           </Grid>
         </Grid>
       </div>
