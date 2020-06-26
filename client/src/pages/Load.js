@@ -88,7 +88,9 @@ class Load extends Component {
 
     console.log(data)
     const videos = [] 
-    videos.push([URL.createObjectURL(new Blob([data.buffer],{ type: 'video/quicktime' })), this.state.videos[0][1]]);
+    const blob = URL.createObjectURL(new Blob([data.buffer],{ type: 'video/quicktime' }))
+    window.open(blob)
+    videos.push([blob, this.state.videos[0][1]]);
     this.setState(state => ({
       ...state,
       videos,
@@ -140,7 +142,7 @@ class Load extends Component {
   }
   
   handleCancelTrim(event) {
-    const videos = []
+    const videos = this.state.videos
     this.setState(state => ({
       ...state,
       videos,
