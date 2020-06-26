@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import {withStyles, Slider, Typography, Button, IconButton, Input, Grid} from '@material-ui/core';
 import './Load.css';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import { createFFmpeg } from '@ffmpeg/ffmpeg';
+
+const ffmpeg = createFFmpeg({
+  log: true,
+});
 
 function VideoThumbComponent(props) {
   return (
@@ -58,10 +63,46 @@ class Load extends Component {
       status: 'pending'
     };
 
+    this.loadFFmpeg()
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
     this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
     this.handleSliderValue = this.handleSliderValue.bind(this);
     this.handleCancelTrim = this.handleCancelTrim.bind(this);
+    this.handleTrim = this.handleTrim.bind(this);
+  }
+
+  async loadFFmpeg() {
+    await ffmpeg.load();
+    console.log("ffmpeg loaded!")
+  }
+
+  async loadVideoFFmpeg(video) {
+    await ffmpeg.write('temp.mov', video)
+  }
+
+  async trimFFmpeg() {
+    let from = this.state.sliderValue[0]/100 * this.refs.vidRef.duration
+    let to = this.state.sliderValue[1]/100 * this.refs.vidRef.duration
+    await ffmpeg.run("-nostdin -hide_banner -i temp.mov -ss " + from + " -to " + to + " -c:v copy -c:a copy output.mov")
+    const data = ffmpeg.read('output.mov');
+
+    console.log(data)
+    const videos = [] 
+    videos.push([URL.createObjectURL(new Blob([data.buffer],{ type: 'video/quicktime' })), this.state.videos[0][1]]);
+    this.setState(state => ({
+      ...state,
+      videos,
+      status: 'loaded'
+    }));
+    console.log(videos)
+    console.log(this.state.videos)
+  }
+
+  handleTrim(event) {
+    console.log(this.state.videos)
+    console.log(this.state.videos[0][1])
+    this.loadVideoFFmpeg(this.state.videos[0][1])
+    this.trimFFmpeg(); 
   }
 
   handleUpdateVideo(event, value) {
@@ -85,7 +126,8 @@ class Load extends Component {
     const videos = []
 
     for (const file of event.target.files) {
-      videos.push([file, URL.createObjectURL(file)]);
+      console.log(file)
+      videos.push([URL.createObjectURL(file), file]);
     }
 
     this.setState(state => ({
@@ -110,7 +152,7 @@ class Load extends Component {
     return this.state.videos.map(video => {
       return (
         <video ref="vidRef" width="100%" height="auto" controls>
-          <source src={video[1]}/>
+          <source src={video[0]}/>
         </video>
       );
     })
@@ -137,6 +179,7 @@ class Load extends Component {
                 component="span"
                 size="small"
                 style={{textTransform:"None"}}
+                onClick={this.handleTrim}
                 >
               Trim
             </Button>
