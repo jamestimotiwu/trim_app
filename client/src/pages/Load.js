@@ -61,6 +61,7 @@ class Load extends Component {
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
     this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
     this.handleSliderValue = this.handleSliderValue.bind(this);
+    this.handleCancelTrim = this.handleCancelTrim.bind(this);
   }
 
   handleUpdateVideo(event, value) {
@@ -94,6 +95,15 @@ class Load extends Component {
     }));
     console.log(this.state.videos)
     
+  }
+  
+  handleCancelTrim(event) {
+    const videos = []
+    this.setState(state => ({
+      ...state,
+      videos,
+      status: 'pending'
+    }));
   }
 
   renderVideo() {
@@ -134,6 +144,7 @@ class Load extends Component {
                 component="span"
                 size="small"
                 style={{textTransform:"None"}}
+                onClick={this.handleCancelTrim}
                 >
               Cancel
             </Button>
