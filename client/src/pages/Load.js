@@ -60,6 +60,7 @@ class Load extends Component {
     this.state = {
       videos: [],
       sliderValue: [0,100],
+      sliderSet: false,
       status: 'pending'
     };
 
@@ -92,6 +93,7 @@ class Load extends Component {
       ...state,
       videos,
       sliderValue: [0,100],
+      sliderSet: (!this.state.sliderSet),
       status: 'loaded'
     }));
   }
@@ -139,10 +141,6 @@ class Load extends Component {
   handleCancelTrim(event) {
     const videos = []
 
-    for (const blob in this.state.videos) {
-        videos.push(blob);
-    }
-
     this.setState(state => ({
       ...state,
       videos,
@@ -162,7 +160,7 @@ class Load extends Component {
 
   renderPlayer() {
     return (
-      <Grid container alignItems="center" justify="center" spacing={2}>
+      <Grid container key={this.state.sliderSet} alignItems="center" justify="center" spacing={2}>
           <Grid item xs>
             <IconButton onClick={() => {this.refs.vidRef.play()}}>
               <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
