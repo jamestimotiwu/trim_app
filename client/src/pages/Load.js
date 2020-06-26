@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useRef} from 'react';
 import {withStyles, Slider, Typography, Button, IconButton, Input, Grid} from '@material-ui/core';
 import './Load.css';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
@@ -12,33 +12,94 @@ function VideoThumbComponent(props) {
   );
 }
 
+const VideoSlider = withStyles({
+  root: {
+    color: '#fcc603',
+    height: 6,
+    padding: '13px 0',
+  },
+  thumb: {
+    height: '27px',
+    width: '27px',
+    backgroundColor: '#fcc603',
+    border: '1px solid currentColor',
+    marginTop: -12,
+    marginLeft: -13,
+    '& .bar': {
+      height: 9,
+      width: 1,
+      backgroundColor: '#000',
+      marginLeft: 1,
+      marginRight: 1,
+    }
+  },
+  active: {
+  },
+  track: {
+    height: 6,
+  },
+  rail: {
+    color: '#d8d8d8',
+    opacity: 1,
+    height: 3,
+  },
+})(Slider);
+
+export function VidSlider(props) {
+  const [value, setValue] = React.useState([0,100]);
+
+  const handleUpdateVideo = (event, newValue) => {
+    setValue(newValue);
+    console.log(value)
+    const videoRef = props.videoRef()
+    console.log(props)
+    console.log(value)
+    let newDuration = videoRef.duration
+    if (value[0] != newValue[0])
+        newDuration = (newValue[0]/100) * newDuration
+    else
+        newDuration = (newValue[1]/100) * newDuration
+    videoRef.currentTime = newDuration 
+    console.log(newDuration)
+  }
+
+  return (
+    <div>
+      <Grid item xs>
+        <IconButton onClick={() => {this.refs.vidRef.play()}}>
+          <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
+        </IconButton>
+      </Grid>
+      <Grid item xs={9}>
+        <VideoSlider 
+            ThumbComponent={VideoThumbComponent}
+            style={{width:"500px"}}
+            value={value}     
+            onChange={handleUpdateVideo}
+        />
+      </Grid>
+      <Grid item xs spacing={5}>
+        <Button variant="contained" 
+            component="span"
+            size="small"
+            >
+          Trim
+        </Button>
+      </Grid>
+    </div>
+  )
+}
+
 class Load extends Component {
   constructor(props) {
     super(props);   
 
     this.state = {
       videos: [],
-      sliderValue: [0,100],
       status: 'pending'
     };
 
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
-    this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
-  }
-
-
-  handleUpdateVideo(event, value) {
-    console.log(value)
-    let newDuration = this.refs.vidRef.duration
-    if (this.state.sliderValue[0] != value[0])
-        newDuration = (value[0]/100) * newDuration
-    else
-        newDuration = (value[1]/100) * newDuration
-    this.refs.vidRef.currentTime = newDuration 
-    console.log(newDuration)
-    this.setState({
-      sliderValue: value
-    });
   }
 
   handleLoadVideo(event) {
@@ -67,39 +128,6 @@ class Load extends Component {
   }
 
   render() {
-    const VideoSlider = withStyles({
-      root: {
-        color: '#fcc603',
-        height: 6,
-        padding: '13px 0',
-      },
-      thumb: {
-        height: '27px',
-        width: '27px',
-        backgroundColor: '#fcc603',
-        border: '1px solid currentColor',
-        marginTop: -12,
-        marginLeft: -13,
-        '& .bar': {
-          height: 9,
-          width: 1,
-          backgroundColor: '#000',
-          marginLeft: 1,
-          marginRight: 1,
-        }
-      },
-      active: {
-      },
-      track: {
-        height: 6,
-      },
-      rail: {
-        color: '#d8d8d8',
-        opacity: 1,
-        height: 3,
-      },
-    })(Slider);
-
     return (
       <div>
         <Grid container spacing={1}>
@@ -128,26 +156,7 @@ class Load extends Component {
               {this.renderVideo()}
             </div>
           </Grid>
-          <Grid item xs>
-            <IconButton onClick={() => {this.refs.vidRef.play()}}>
-              <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
-            </IconButton>
-          </Grid>
-          <Grid item xs={9}>
-            <VideoSlider 
-                ThumbComponent={VideoThumbComponent}
-                defaultValue={this.state.sliderValue}     
-                onChangeCommitted={this.handleUpdateVideo}
-            />
-          </Grid>
-          <Grid item xs spacing={5}>
-            <Button variant="contained" 
-                component="span"
-                size="small"
-                >
-              Trim
-            </Button>
-          </Grid>
+          <VidSlider videoRef={() => {return this.refs.vidRef}}/>
         </Grid>
       </div>
     )
