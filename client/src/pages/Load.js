@@ -76,11 +76,8 @@ class Load extends Component {
     console.log("ffmpeg loaded!")
   }
 
-  async loadVideoFFmpeg(video) {
-    await ffmpeg.write('temp.mov', video)
-  }
-
   async trimFFmpeg() {
+    await ffmpeg.write('temp.mov', this.state.videos[0][1])
     let from = this.state.sliderValue[0]/100 * this.refs.vidRef.duration
     let to = this.state.sliderValue[1]/100 * this.refs.vidRef.duration
     await ffmpeg.run("-nostdin -hide_banner -i temp.mov -ss " + from + " -to " + to + " -c:v copy -c:a copy output.mov")
@@ -94,16 +91,14 @@ class Load extends Component {
     this.setState(state => ({
       ...state,
       videos,
+      sliderValue: [0,100],
       status: 'loaded'
     }));
-    console.log(videos)
-    console.log(this.state.videos)
   }
 
   handleTrim(event) {
     console.log(this.state.videos)
     console.log(this.state.videos[0][1])
-    this.loadVideoFFmpeg(this.state.videos[0][1])
     this.trimFFmpeg(); 
   }
 
@@ -142,7 +137,12 @@ class Load extends Component {
   }
   
   handleCancelTrim(event) {
-    const videos = this.state.videos
+    const videos = []
+
+    for (const blob in this.state.videos) {
+        videos.push(blob);
+    }
+
     this.setState(state => ({
       ...state,
       videos,
@@ -153,7 +153,7 @@ class Load extends Component {
   renderVideo() {
     return this.state.videos.map(video => {
       return (
-        <video ref="vidRef" width="100%" height="auto" controls>
+        <video key={video[0]} ref="vidRef" width="100%" height="auto" controls>
           <source src={video[0]}/>
         </video>
       );
