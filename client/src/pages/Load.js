@@ -19,14 +19,14 @@ const VideoSlider = withStyles({
     padding: '13px 0',
   },
   thumb: {
-    height: '27px',
-    width: '27px',
+    height: '45px',
+    width: '12px',
     backgroundColor: '#fcc603',
     border: '1px solid currentColor',
-    marginTop: -12,
-    marginLeft: -13,
+    borderRadius: "10%",
+    marginTop: -20,
     '& .bar': {
-      height: 9,
+      height: 20,
       width: 1,
       backgroundColor: '#000',
       marginLeft: 1,
@@ -36,7 +36,10 @@ const VideoSlider = withStyles({
   active: {
   },
   track: {
-    height: 6,
+    marginTop: -20,
+    color: '#fff',
+    height: 41,
+    border: "2px solid #fcc603",
   },
   rail: {
     color: '#d8d8d8',
@@ -67,6 +70,7 @@ class Load extends Component {
     else
         newDuration = (value[1]/100) * newDuration
     this.refs.vidRef.currentTime = newDuration 
+    console.log(newDuration)
   }
 
   handleSliderValue(event, value) {
@@ -74,7 +78,6 @@ class Load extends Component {
       ...state,
       sliderValue: value,
     }));
-    console.log(this.state.sliderValue)
   }
 
   handleLoadVideo(event) {
@@ -87,6 +90,7 @@ class Load extends Component {
     this.setState(state => ({
       ...state,
       videos,
+      status: 'loaded'
     }));
     console.log(this.state.videos)
     
@@ -95,43 +99,16 @@ class Load extends Component {
   renderVideo() {
     return this.state.videos.map(video => {
       return (
-        <video ref="vidRef" width="100%" height="auto">
+        <video ref="vidRef" width="100%" height="auto" controls>
           <source src={video[1]}/>
         </video>
       );
     })
   }
 
-  render() {
-
+  renderPlayer() {
     return (
-      <div>
-        <Grid container spacing={1}>
-          <Grid item xs={12}>
-            <div style={{margin:"0 auto"}} id="file-load">
-              <label htmlFor="upload-video">
-                <Button variant="contained" 
-                    component="span"
-                    color="secondary"
-                    disabled={this.state.status === 'loaded'}
-                    >
-                  Load video
-                </Button>
-              </label>
-              <input
-                accept="video/*"
-                style={{display: "None"}}
-                id="upload-video"
-                type="file"
-                onChange={this.handleLoadVideo}
-              />
-            </div>
-          </Grid>
-          <Grid item xs={12}>
-            <div id="video-render">
-              {this.renderVideo()}
-            </div>
-          </Grid>
+      <Grid container alignItems="center" justify="center" spacing={2}>
           <Grid item xs>
             <IconButton onClick={() => {this.refs.vidRef.play()}}>
               <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
@@ -146,13 +123,58 @@ class Load extends Component {
             />
           </Grid>
           <Grid item xs spacing={5}>
-            <Button variant="contained" 
+            <Button variant="outlined" 
                 component="span"
                 size="small"
+                style={{textTransform:"None"}}
                 >
               Trim
             </Button>
+            <Button variant="outlined" 
+                component="span"
+                size="small"
+                style={{textTransform:"None"}}
+                >
+              Cancel
+            </Button>
           </Grid>
+      </Grid>
+    )
+  }
+
+  render() {
+
+    return (
+      <div>
+        <Grid container alignItems="center" justify="center" spacing={1}>
+          <Grid item xs={12}>
+          {(this.state.status === 'pending') && 
+            (<div style={{margin:"0 auto",paddingTop: "10em"}} id="file-load">
+              <label htmlFor="upload-video">
+                <Button variant="outlined" 
+                    component="span"
+                    color="default"
+                    disabled={this.state.status === 'loaded'}
+                    style={{textTransform:"None"}}
+                    >
+                  Load
+                </Button>
+              </label>
+              <input
+                accept="video/*"
+                style={{display: "None"}}
+                id="upload-video"
+                type="file"
+                onChange={this.handleLoadVideo}
+              />
+            </div>)}
+          </Grid>
+          <Grid item xs={12}>
+            <div id="video-render">
+              {this.renderVideo()}
+            </div>
+          </Grid>
+          {(this.state.status === 'loaded') && this.renderPlayer()}
         </Grid>
       </div>
     )
