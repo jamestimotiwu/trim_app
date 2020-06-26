@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import {withStyles, Slider, Typography, Button, Input, Grid} from '@material-ui/core';
+import {withStyles, Slider, Typography, Button, IconButton, Input, Grid} from '@material-ui/core';
 import './Load.css';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 
 function VideoThumbComponent(props) {
   return (
@@ -101,7 +102,7 @@ class Load extends Component {
 
     return (
       <div>
-        <Grid container spacing={2}>
+        <Grid container spacing={1}>
           <Grid item xs={12}>
             <div style={{margin:"0 auto"}} id="file-load">
               <label htmlFor="upload-video">
@@ -127,12 +128,25 @@ class Load extends Component {
               {this.renderVideo()}
             </div>
           </Grid>
-          <Grid item xs={12}>
+          <Grid item xs>
+            <IconButton onClick={() => {this.refs.vidRef.play()}}>
+              <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
+            </IconButton>
+          </Grid>
+          <Grid item xs={9}>
             <VideoSlider 
                 ThumbComponent={VideoThumbComponent}
                 defaultValue={this.state.sliderValue}     
                 onChangeCommitted={this.handleUpdateVideo}
             />
+          </Grid>
+          <Grid item xs spacing={5}>
+            <Button variant="contained" 
+                component="span"
+                size="small"
+                >
+              Trim
+            </Button>
           </Grid>
         </Grid>
       </div>
