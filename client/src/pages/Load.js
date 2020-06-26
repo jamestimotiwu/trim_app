@@ -12,6 +12,39 @@ function VideoThumbComponent(props) {
   );
 }
 
+const VideoSlider = withStyles({
+  root: {
+    color: '#fcc603',
+    height: 6,
+    padding: '13px 0',
+  },
+  thumb: {
+    height: '27px',
+    width: '27px',
+    backgroundColor: '#fcc603',
+    border: '1px solid currentColor',
+    marginTop: -12,
+    marginLeft: -13,
+    '& .bar': {
+      height: 9,
+      width: 1,
+      backgroundColor: '#000',
+      marginLeft: 1,
+      marginRight: 1,
+    }
+  },
+  active: {
+  },
+  track: {
+    height: 6,
+  },
+  rail: {
+    color: '#d8d8d8',
+    opacity: 1,
+    height: 3,
+  },
+})(Slider);
+
 class Load extends Component {
   constructor(props) {
     super(props);   
@@ -24,21 +57,24 @@ class Load extends Component {
 
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
     this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
+    this.handleSliderValue = this.handleSliderValue.bind(this);
   }
 
-
   handleUpdateVideo(event, value) {
-    console.log(value)
     let newDuration = this.refs.vidRef.duration
     if (this.state.sliderValue[0] != value[0])
         newDuration = (value[0]/100) * newDuration
     else
         newDuration = (value[1]/100) * newDuration
     this.refs.vidRef.currentTime = newDuration 
-    console.log(newDuration)
-    this.setState({
-      sliderValue: value
-    });
+  }
+
+  handleSliderValue(event, value) {
+    this.setState(state => ({
+      ...state,
+      sliderValue: value,
+    }));
+    console.log(this.state.sliderValue)
   }
 
   handleLoadVideo(event) {
@@ -50,7 +86,7 @@ class Load extends Component {
 
     this.setState(state => ({
       ...state,
-      videos
+      videos,
     }));
     console.log(this.state.videos)
     
@@ -67,38 +103,6 @@ class Load extends Component {
   }
 
   render() {
-    const VideoSlider = withStyles({
-      root: {
-        color: '#fcc603',
-        height: 6,
-        padding: '13px 0',
-      },
-      thumb: {
-        height: '27px',
-        width: '27px',
-        backgroundColor: '#fcc603',
-        border: '1px solid currentColor',
-        marginTop: -12,
-        marginLeft: -13,
-        '& .bar': {
-          height: 9,
-          width: 1,
-          backgroundColor: '#000',
-          marginLeft: 1,
-          marginRight: 1,
-        }
-      },
-      active: {
-      },
-      track: {
-        height: 6,
-      },
-      rail: {
-        color: '#d8d8d8',
-        opacity: 1,
-        height: 3,
-      },
-    })(Slider);
 
     return (
       <div>
@@ -136,8 +140,9 @@ class Load extends Component {
           <Grid item xs={9}>
             <VideoSlider 
                 ThumbComponent={VideoThumbComponent}
-                defaultValue={this.state.sliderValue}     
-                onChangeCommitted={this.handleUpdateVideo}
+                defaultValue={[0,100]}    
+                onChange={this.handleUpdateVideo}
+                onChangeCommitted={this.handleSliderValue}
             />
           </Grid>
           <Grid item xs spacing={5}>
