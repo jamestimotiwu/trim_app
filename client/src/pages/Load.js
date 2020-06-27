@@ -87,8 +87,8 @@ class Load extends Component {
     console.log(data)
     const videos = [] 
     const blob = URL.createObjectURL(new Blob([data.buffer],{ type: 'video/quicktime' }))
-    window.open(blob)
-    videos.push([blob, this.state.videos[0][1]]);
+    //window.open(blob)
+    videos.push([blob, new File([blob], "filename.mov", {type: 'video/quicktime'})]);
     this.setState(state => ({
       ...state,
       videos,
