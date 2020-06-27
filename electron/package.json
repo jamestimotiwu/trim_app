@@ -37,8 +37,8 @@
     ],
     "publish": {
       "provider": "github",
-      "repo": "electron-cra-example",
-      "owner": "johndyer24"
+      "repo": "trim-app",
+      "owner": "jamestimotiwu"
     }
   },
   "eslintConfig": {

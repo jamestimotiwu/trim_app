@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+const fs = require('fs')
 const path = require('path');
 const url = require('url');
 const { channels } = require('../src/shared/constants');
@@ -13,8 +14,8 @@ function createWindow () {
   });
 
   mainWindow = new BrowserWindow({ 
-	width: 800, 
-	height: 600,
+	width: 1200, 
+	height: 800,
 	webPreferences: {
 	  preload: path.join(__dirname, 'preload.js'),
 	},
@@ -44,4 +45,9 @@ ipcMain.on(channels.APP_INFO, (event) => {
 	appName: app.getName(),
 	appVersion: app.getVersion(),
   });
+});
+
+ipcMain.on(channels.WRITE_VIDEO_FILE, (event, {path, file}) => {
+  fs.writeFileSync(path, file);
+  console.log("written to" + path);
 });

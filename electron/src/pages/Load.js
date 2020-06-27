@@ -3,19 +3,19 @@ import {withStyles, Slider, Typography, Button, IconButton, Input, Grid} from '@
 import './Load.css';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import { createFFmpeg } from '@ffmpeg/ffmpeg';
+import { channels } from '../shared/constants';
+
+const { ipcRenderer } = window;
+var IS_ELECTRON = false;
+
+if (navigator.userAgent.toLowerCase().indexOf(' electron/') > - 1) {
+  IS_ELECTRON = true;
+}
+
 
 const ffmpeg = createFFmpeg({
   log: true,
 });
-
-function VideoThumbComponent(props) {
-  return (
-    <span {...props}>
-      <span className="bar" />
-      <span className="bar" />
-    </span>
-  );
-}
 
 const VideoSlider = withStyles({
   root: {
@@ -53,6 +53,15 @@ const VideoSlider = withStyles({
   },
 })(Slider);
 
+function VideoThumbComponent(props) {
+  return (
+	<span {...props}>
+	  <span className="bar" />
+	  <span className="bar" />
+	</span>
+  );
+}
+
 class Load extends Component {
   constructor(props) {
     super(props);   
@@ -87,6 +96,15 @@ class Load extends Component {
     console.log(data)
     const videos = [] 
     const blob = URL.createObjectURL(new Blob([data.buffer],{ type: 'video/quicktime' }))
+
+	if (IS_ELECTRON) {
+		// Save into fs
+		ipcRenderer.send(channels.WRITE_VIDEO_FILE, {
+		  path: this.state.videos[0][1].path,
+		  file: Buffer(data.buffer),
+		})
+	}
+
     //window.open(blob)
     videos.push([blob, new File([blob], "filename.mov", {type: 'video/quicktime'})]);
     this.setState(state => ({
