@@ -6,6 +6,7 @@ const { channels } = require('../src/shared/constants');
 const { spawn } = require('child_process');
 const ffmpegPath = require('ffmpeg-static');
 
+let output;
 
 let mainWindow;
 
@@ -58,7 +59,7 @@ ipcMain.on(channels.WRITE_VIDEO_FILE, (event, {path, file}) => {
 ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
   let from = sliderval[0]/100 * duration;
   let to = sliderval[1]/100 * duration;
-  let output = require('path').dirname(file) + '\\output.mov';
+  output = require('path').dirname(file) + '\\output.mov';
   let args = [
 	'-nostdin',
 	'-y',
@@ -90,11 +91,16 @@ ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
   });
 
   proc.on('close', () => {
-    var output_video = fs.readFileSync(output);
-	fs.renameSync(output, file);
+    fs.renameSync(output, file);
+    var output_video = fs.readFileSync(file);
 	event.sender.send(channels.FFMPEG_TRIM, {
 	  out: output_video,
 	});
     console.log('finished');
   });
+});
+
+ipcMain.on(channels.SET_TEMP_VIDEO, (event, {file}) => {
+  fs.renameSync(output, file);
+  console.log("written to" + path);
 });

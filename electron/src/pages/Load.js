@@ -105,6 +105,7 @@ class Load extends Component {
 		status: 'loaded'
 	  }));
 	});
+	
   }
 
   handleTrim(event) {
