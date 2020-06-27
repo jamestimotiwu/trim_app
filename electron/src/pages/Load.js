@@ -63,6 +63,7 @@ class Load extends Component {
 
     this.state = {
       videos: [],
+	  currPath: '',
       sliderValue: [0,100],
       sliderSet: false,
       status: 'pending'
@@ -77,36 +78,18 @@ class Load extends Component {
   }
 
   trimFFmpeg() {
-    /*
-	await ffmpeg.write('temp.mov', this.state.videos[0][1])
-    let from = this.state.sliderValue[0]/100 * this.refs.vidRef.duration
-    let to = this.state.sliderValue[1]/100 * this.refs.vidRef.duration
-    await ffmpeg.run("-nostdin -hide_banner -i temp.mov -ss " + from + " -to " + to + " -c:v copy -c:a copy output.mov")
-    const data = ffmpeg.read('output.mov');
-
-    console.log(data)
-    const videos = [] 
-    const blob = URL.createObjectURL(new Blob([data.buffer],{ type: 'video/quicktime' }))
-*/
 	const duration = this.refs.vidRef.duration
 	const sliderval = this.state.sliderValue
 	const file = this.state.videos[0][1]
 
 	let videos = [];
+	
 	ipcRenderer.send(channels.FFMPEG_TRIM, {
 	  sliderval: sliderval,
 	  duration: duration,
-	  file: file.path,
+	  file: this.state.currPath,
 	});
-	/*
-	if (IS_ELECTRON) {
-		// Save into fs
-		ipcRenderer.send(channels.WRITE_VIDEO_FILE, {
-		  path: this.state.videos[0][1].path,
-		  file: Buffer(data.buffer),
-		})
-	}
-	*/
+	
 	ipcRenderer.on(channels.FFMPEG_TRIM, (event, arg) => {
       ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
 	  const { out } = arg;
@@ -149,15 +132,18 @@ class Load extends Component {
 
   handleLoadVideo(event) {
     const videos = []
+	let path = '';
 
     for (const file of event.target.files) {
       console.log(file)
       videos.push([URL.createObjectURL(file), file]);
+	  path = file.path;
     }
 
     this.setState(state => ({
       ...state,
       videos,
+	  currPath: path,
       status: 'loaded'
     }));
     console.log(this.state.videos)

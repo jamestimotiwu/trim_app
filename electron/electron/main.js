@@ -76,9 +76,8 @@ ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
 	output,
 	]
 
-  console.log("spawning: " + file + " from " + ffmpegPath)
   var proc = spawn(ffmpegPath, args)
-  console.log("spawned: " + file + " from " + ffmpegPath)
+
   proc.stdout.on('data', function(data) {
     console.log(data);
 	fs.writeFileSync(file, data);
@@ -89,8 +88,10 @@ ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
 	console.log(data)
 	//fs.writeFileSync(file, data);
   });
+
   proc.on('close', () => {
     var output_video = fs.readFileSync(output);
+	fs.renameSync(output, file);
 	event.sender.send(channels.FFMPEG_TRIM, {
 	  out: output_video,
 	});
