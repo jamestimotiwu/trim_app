@@ -3,6 +3,9 @@ const fs = require('fs')
 const path = require('path');
 const url = require('url');
 const { channels } = require('../src/shared/constants');
+const { spawn } = require('child_process');
+const ffmpegPath = require('ffmpeg-static');
+
 
 let mainWindow;
 
@@ -50,4 +53,47 @@ ipcMain.on(channels.APP_INFO, (event) => {
 ipcMain.on(channels.WRITE_VIDEO_FILE, (event, {path, file}) => {
   fs.writeFileSync(path, file);
   console.log("written to" + path);
+});
+
+ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
+  let from = sliderval[0]/100 * duration;
+  let to = sliderval[1]/100 * duration;
+  let output = require('path').dirname(file) + '\\output.mov';
+  let args = [
+	'-nostdin',
+	'-y',
+	'-hide_banner',
+	'-i',
+	file,
+	'-ss',
+	from,
+	'-to',
+	to,
+	'-c:v',
+	'copy',
+	'-c:a',
+	'copy',
+	output,
+	]
+
+  console.log("spawning: " + file + " from " + ffmpegPath)
+  var proc = spawn(ffmpegPath, args)
+  console.log("spawned: " + file + " from " + ffmpegPath)
+  proc.stdout.on('data', function(data) {
+    console.log(data);
+	fs.writeFileSync(file, data);
+  });
+
+  proc.stderr.setEncoding("utf8");
+  proc.stderr.on('data', function(data) {
+	console.log(data)
+	//fs.writeFileSync(file, data);
+  });
+  proc.on('close', () => {
+    var output_video = fs.readFileSync(output);
+	event.sender.send(channels.FFMPEG_TRIM, {
+	  out: output_video,
+	});
+    console.log('finished');
+  });
 });

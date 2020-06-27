@@ -12,11 +12,6 @@ if (navigator.userAgent.toLowerCase().indexOf(' electron/') > - 1) {
   IS_ELECTRON = true;
 }
 
-
-const ffmpeg = createFFmpeg({
-  log: true,
-});
-
 const VideoSlider = withStyles({
   root: {
     color: '#fcc603',
@@ -73,7 +68,7 @@ class Load extends Component {
       status: 'pending'
     };
 
-    this.loadFFmpeg()
+    //this.loadFFmpeg()
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
     this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
     this.handleSliderValue = this.handleSliderValue.bind(this);
@@ -81,13 +76,9 @@ class Load extends Component {
     this.handleTrim = this.handleTrim.bind(this);
   }
 
-  async loadFFmpeg() {
-    await ffmpeg.load();
-    console.log("ffmpeg loaded!")
-  }
-
-  async trimFFmpeg() {
-    await ffmpeg.write('temp.mov', this.state.videos[0][1])
+  trimFFmpeg() {
+    /*
+	await ffmpeg.write('temp.mov', this.state.videos[0][1])
     let from = this.state.sliderValue[0]/100 * this.refs.vidRef.duration
     let to = this.state.sliderValue[1]/100 * this.refs.vidRef.duration
     await ffmpeg.run("-nostdin -hide_banner -i temp.mov -ss " + from + " -to " + to + " -c:v copy -c:a copy output.mov")
@@ -96,7 +87,18 @@ class Load extends Component {
     console.log(data)
     const videos = [] 
     const blob = URL.createObjectURL(new Blob([data.buffer],{ type: 'video/quicktime' }))
+*/
+	const duration = this.refs.vidRef.duration
+	const sliderval = this.state.sliderValue
+	const file = this.state.videos[0][1]
 
+	let videos = [];
+	ipcRenderer.send(channels.FFMPEG_TRIM, {
+	  sliderval: sliderval,
+	  duration: duration,
+	  file: file.path,
+	});
+	/*
 	if (IS_ELECTRON) {
 		// Save into fs
 		ipcRenderer.send(channels.WRITE_VIDEO_FILE, {
@@ -104,16 +106,22 @@ class Load extends Component {
 		  file: Buffer(data.buffer),
 		})
 	}
-
-    //window.open(blob)
-    videos.push([blob, new File([blob], "filename.mov", {type: 'video/quicktime'})]);
-    this.setState(state => ({
-      ...state,
-      videos,
-      sliderValue: [0,100],
-      sliderSet: (!this.state.sliderSet),
-      status: 'loaded'
-    }));
+	*/
+	ipcRenderer.on(channels.FFMPEG_TRIM, (event, arg) => {
+      ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
+	  const { out } = arg;
+	  console.log(out)
+      const blob = URL.createObjectURL(new Blob([out],{ type: 'video/quicktime' }))
+	  videos.push([blob, new File([blob], "filename.mov", {type: 'video/quicktime'})]);
+	  console.log(videos)
+	  this.setState(state => ({
+		...state,
+		videos,
+		sliderValue: [0,100],
+		sliderSet: (!this.state.sliderSet),
+		status: 'loaded'
+	  }));
+	});
   }
 
   handleTrim(event) {
