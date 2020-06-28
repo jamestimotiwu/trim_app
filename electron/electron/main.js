@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol } = require('electron');
 const fs = require('fs')
 const path = require('path');
 const url = require('url');
@@ -30,7 +30,16 @@ function createWindow () {
   });
 }
 
-app.on('ready', createWindow);
+app.on('ready', () => {
+  protocol.interceptFileProtocol('file', (request, callback) => {
+	const url = request.url.substr(7);
+	callback({
+		path: path.normalize(`${__dirname}/${url}`)
+	})}, (err) => {
+	  if (err) console.error('Failed to register protocol')
+	})
+  createWindow()
+});
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') {
