@@ -85,13 +85,14 @@ class Load extends Component {
 	const file = this.state.videos[0][1]
 
 	let videos = [];
-	
+
+/*
 	ipcRenderer.send(channels.GET_IMG, {
 	  sliderval: sliderval,
 	  duration: duration,
 	  file: this.state.currPath,
 	});
-	
+*/	
 	ipcRenderer.send(channels.FFMPEG_TRIM, {
 	  sliderval: sliderval,
 	  duration: duration,
@@ -112,6 +113,9 @@ class Load extends Component {
 		sliderSet: (!this.state.sliderSet),
 		status: 'loaded'
 	  }));
+	  ipcRenderer.send(channels.SET_TEMP_VIDEO, {
+		file: this.state.currPath,
+	  });
 	});
 	
   }

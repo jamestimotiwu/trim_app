@@ -4,10 +4,9 @@ const path = require('path');
 const url = require('url');
 const { channels } = require('../src/shared/constants');
 const { spawn } = require('child_process');
-const ffmpegPath = require('ffmpeg-static');
+const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked');
 
 let output;
-
 let mainWindow;
 
 function createWindow () {
@@ -100,8 +99,7 @@ ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
   });
 
   proc.on('close', () => {
-    fs.renameSync(output, file);
-    var output_video = fs.readFileSync(file);
+    var output_video = fs.readFileSync(output);
 	event.sender.send(channels.FFMPEG_TRIM, {
 	  out: output_video,
 	});

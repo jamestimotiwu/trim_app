@@ -1,7 +1,7 @@
 {
-  "name": "electron-cra-example",
+  "name": "electron-trim-app",
   "version": "0.1.0",
-  "productName": "Electron Create React App Example",
+  "productName": "Trim App",
   "main": "electron/main.js",
   "private": true,
   "dependencies": {
@@ -32,6 +32,9 @@
     "eject": "react-scripts eject"
   },
   "build": {
+    "asarUnpack": [
+	  "**/app/node_modules/ffmpeg-static/*"
+	],
     "files": [
       "build/**/*",
       "node_modules/**/*"
