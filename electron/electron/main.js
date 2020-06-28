@@ -29,16 +29,7 @@ function createWindow () {
   });
 }
 
-app.on('ready', () => {
-  protocol.interceptFileProtocol('file', (request, callback) => {
-	const url = request.url.substr(7);
-	callback({
-		path: path.normalize(`${__dirname}/${url}`)
-	})}, (err) => {
-	  if (err) console.error('Failed to register protocol')
-	})
-  createWindow()
-});
+app.on('ready', createWindow);
 
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') {
@@ -65,8 +56,8 @@ ipcMain.on(channels.WRITE_VIDEO_FILE, (event, {path, file}) => {
 });
 
 ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
-  let from = sliderval[0]/100 * duration;
-  let to = sliderval[1]/100 * duration;
+  let from = sliderval[0]
+  let to = sliderval[1]
   output = require('path').dirname(file) + '\\output.mov';
   let args = [
 	'-nostdin',
@@ -108,7 +99,7 @@ ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
 });
 
 ipcMain.on(channels.GET_IMG, (event, {sliderval, duration, file}) => {
-  let from = sliderval[0]/100 * duration;
+  let from = sliderval[0]
   output = require('path').dirname(file) + '\\output.png';
   console.log('get_img');
   console.log(from)

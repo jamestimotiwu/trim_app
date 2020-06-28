@@ -69,6 +69,8 @@ class Load extends Component {
       sliderSet: false,
       status: 'pending'
     };
+
+	this.videoRef = null
 	
 	window.addEventListener('keydown', this.handleOnKeyDown);
     //this.loadFFmpeg()
@@ -79,8 +81,21 @@ class Load extends Component {
     this.handleTrim = this.handleTrim.bind(this);
   }
 
+  vidRef = ref => {
+	this.videoRef = ref;
+
+	if(this.videoRef != null) {
+	  this.videoRef.addEventListener('durationchange', this.onVideoLoad);
+	}
+  }
+
+  onVideoLoad = () => {
+	this.setState({status: 'loaded'});
+	console.log(this.videoRef.duration);
+  }
+
   trimFFmpeg() {
-	const duration = this.refs.vidRef.duration
+	const duration = this.videoRef.duration
 	const sliderval = this.state.sliderValue
 	const file = this.state.videos[0][1]
 
@@ -121,9 +136,9 @@ class Load extends Component {
   }
 
   handleOnKeyDown = (e) => {
-	if (e.key === 'k' && this.refs.vidRef) {
-		this.refs.vidRef.playbackRate += 0.25;
-		console.log(this.refs.vidRef.playbackRate)
+	if (e.key === 'k' && this.videoRef) {
+		this.videoRef.playbackRate += 0.25;
+		console.log(this.videoRef.playbackRate)
 	}
 //	console.log(e.key);
   }
@@ -135,12 +150,12 @@ class Load extends Component {
   }
 
   handleUpdateVideo(event, value) {
-    let newDuration = this.refs.vidRef.duration
-    if (this.state.sliderValue[0] != value[0])
-        newDuration = (value[0]/100) * newDuration
-    else
-        newDuration = (value[1]/100) * newDuration
-    this.refs.vidRef.currentTime = newDuration 
+	if (value[0] != this.state.sliderValue[0]) {
+	  this.videoRef.currentTime = value[0];
+	} else {
+	  this.videoRef.currentTime = value[1];
+	}
+	console.log(value);
   }
 
   handleSliderValue(event, value) {
@@ -164,7 +179,7 @@ class Load extends Component {
       ...state,
       videos,
 	  currPath: path,
-      status: 'loaded'
+     // status: 'loaded'
     }));
     console.log(this.state.videos)
     
@@ -183,7 +198,7 @@ class Load extends Component {
   renderVideo() {
     return this.state.videos.map(video => {
       return (
-        <video key={video[0]} ref="vidRef" width="100%" height="auto" controls>
+        <video key={video[0]} ref={this.vidRef} width="100%" height="auto" preload="metadata" controls>
           <source src={video[0]}/>
         </video>
       );
@@ -194,14 +209,16 @@ class Load extends Component {
     return (
       <Grid container key={this.state.sliderSet} alignItems="center" justify="center" spacing={2}>
           <Grid item xs>
-            <IconButton onClick={() => {this.refs.vidRef.play()}}>
+            <IconButton onClick={() => {this.videoRef.play()}}>
               <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
             </IconButton>
           </Grid>
           <Grid item xs={9}>
             <VideoSlider 
                 ThumbComponent={VideoThumbComponent}
-                defaultValue={[0,100]}    
+                defaultValue={[0,this.videoRef.duration]}    
+				max={this.videoRef.duration}
+				step={parseFloat((this.videoRef.duration/100).toPrecision(3))}
                 onChange={this.handleUpdateVideo}
                 onChangeCommitted={this.handleSliderValue}
             />
