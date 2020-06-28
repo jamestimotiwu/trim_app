@@ -65,10 +65,12 @@ class Load extends Component {
       videos: [],
 	  currPath: '',
       sliderValue: [0,100],
+	  playbackRate: 1,
       sliderSet: false,
       status: 'pending'
     };
-
+	
+	window.addEventListener('keydown', this.handleOnKeyDown);
     //this.loadFFmpeg()
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
     this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
@@ -83,6 +85,12 @@ class Load extends Component {
 	const file = this.state.videos[0][1]
 
 	let videos = [];
+	
+	ipcRenderer.send(channels.GET_IMG, {
+	  sliderval: sliderval,
+	  duration: duration,
+	  file: this.state.currPath,
+	});
 	
 	ipcRenderer.send(channels.FFMPEG_TRIM, {
 	  sliderval: sliderval,
@@ -108,6 +116,14 @@ class Load extends Component {
 	
   }
 
+  handleOnKeyDown = (e) => {
+	if (e.key === 'k' && this.refs.vidRef) {
+		this.refs.vidRef.playbackRate += 0.25;
+		console.log(this.refs.vidRef.playbackRate)
+	}
+//	console.log(e.key);
+  }
+
   handleTrim(event) {
     console.log(this.state.videos)
     console.log(this.state.videos[0][1])
@@ -121,7 +137,6 @@ class Load extends Component {
     else
         newDuration = (value[1]/100) * newDuration
     this.refs.vidRef.currentTime = newDuration 
-    console.log(newDuration)
   }
 
   handleSliderValue(event, value) {

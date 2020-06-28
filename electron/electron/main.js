@@ -109,6 +109,49 @@ ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
   });
 });
 
+ipcMain.on(channels.GET_IMG, (event, {sliderval, duration, file}) => {
+  let from = sliderval[0]/100 * duration;
+  output = require('path').dirname(file) + '\\output.png';
+  console.log('get_img');
+  console.log(from)
+  let args = [
+	'-nostdin',
+	'-y',
+	'-hide_banner',
+	'-i',
+	file,
+	'-ss',
+	from,
+	'-vframes',
+	'1',
+	'-an',
+	'-vf',
+	'scale=45:-1',
+	'-c:v',
+	'png',
+	'-f',
+	'image2pipe',
+	'pipe:1',
+	]
+
+  var proc = spawn(ffmpegPath, args)
+
+  proc.stdout.on('data', function(data) {
+    console.log(data);
+	fs.writeFileSync(file, data);
+  });
+
+  proc.stderr.setEncoding("utf8");
+  proc.stderr.on('data', function(data) {
+	console.log(data)
+	//fs.writeFileSync(file, data);
+  });
+
+  proc.on('close', () => {
+    console.log('finished');
+  });
+});
+
 ipcMain.on(channels.SET_TEMP_VIDEO, (event, {file}) => {
   fs.renameSync(output, file);
   console.log("written to" + path);
