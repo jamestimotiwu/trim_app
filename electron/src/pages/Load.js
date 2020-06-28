@@ -12,11 +12,6 @@ if (navigator.userAgent.toLowerCase().indexOf(' electron/') > - 1) {
   IS_ELECTRON = true;
 }
 
-
-const ffmpeg = createFFmpeg({
-  log: true,
-});
-
 const VideoSlider = withStyles({
   root: {
     color: '#fcc603',
@@ -68,12 +63,17 @@ class Load extends Component {
 
     this.state = {
       videos: [],
+	  currPath: '',
       sliderValue: [0,100],
+	  playbackRate: 1,
       sliderSet: false,
       status: 'pending'
     };
 
-    this.loadFFmpeg()
+	this.videoRef = null
+	
+	window.addEventListener('keydown', this.handleOnKeyDown);
+    //this.loadFFmpeg()
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
     this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
     this.handleSliderValue = this.handleSliderValue.bind(this);
@@ -81,39 +81,66 @@ class Load extends Component {
     this.handleTrim = this.handleTrim.bind(this);
   }
 
-  async loadFFmpeg() {
-    await ffmpeg.load();
-    console.log("ffmpeg loaded!")
+  vidRef = ref => {
+	this.videoRef = ref;
+
+	if(this.videoRef != null) {
+	  this.videoRef.addEventListener('durationchange', this.onVideoLoad);
+	}
   }
 
-  async trimFFmpeg() {
-    await ffmpeg.write('temp.mov', this.state.videos[0][1])
-    let from = this.state.sliderValue[0]/100 * this.refs.vidRef.duration
-    let to = this.state.sliderValue[1]/100 * this.refs.vidRef.duration
-    await ffmpeg.run("-nostdin -hide_banner -i temp.mov -ss " + from + " -to " + to + " -c:v copy -c:a copy output.mov")
-    const data = ffmpeg.read('output.mov');
+  onVideoLoad = () => {
+	this.setState({status: 'loaded'});
+	console.log(this.videoRef.duration);
+  }
 
-    console.log(data)
-    const videos = [] 
-    const blob = URL.createObjectURL(new Blob([data.buffer],{ type: 'video/quicktime' }))
+  trimFFmpeg() {
+	const duration = this.videoRef.duration
+	const sliderval = this.state.sliderValue
+	const file = this.state.videos[0][1]
 
-	if (IS_ELECTRON) {
-		// Save into fs
-		ipcRenderer.send(channels.WRITE_VIDEO_FILE, {
-		  path: this.state.videos[0][1].path,
-		  file: Buffer(data.buffer),
-		})
+	let videos = [];
+
+/*
+	ipcRenderer.send(channels.GET_IMG, {
+	  sliderval: sliderval,
+	  duration: duration,
+	  file: this.state.currPath,
+	});
+*/	
+	ipcRenderer.send(channels.FFMPEG_TRIM, {
+	  sliderval: sliderval,
+	  duration: duration,
+	  file: this.state.currPath,
+	});
+	
+	ipcRenderer.on(channels.FFMPEG_TRIM, (event, arg) => {
+      ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
+	  const { out } = arg;
+	  console.log(out)
+      const blob = URL.createObjectURL(new Blob([out],{ type: 'video/quicktime' }))
+	  videos.push([blob, new File([blob], "filename.mov", {type: 'video/quicktime'})]);
+	  console.log(videos)
+	  this.setState(state => ({
+		...state,
+		videos,
+		sliderValue: [0,100],
+		sliderSet: (!this.state.sliderSet),
+		status: 'loaded'
+	  }));
+	  ipcRenderer.send(channels.SET_TEMP_VIDEO, {
+		file: this.state.currPath,
+	  });
+	});
+	
+  }
+
+  handleOnKeyDown = (e) => {
+	if (e.key === 'k' && this.videoRef) {
+		this.videoRef.playbackRate += 0.25;
+		console.log(this.videoRef.playbackRate)
 	}
-
-    //window.open(blob)
-    videos.push([blob, new File([blob], "filename.mov", {type: 'video/quicktime'})]);
-    this.setState(state => ({
-      ...state,
-      videos,
-      sliderValue: [0,100],
-      sliderSet: (!this.state.sliderSet),
-      status: 'loaded'
-    }));
+//	console.log(e.key);
   }
 
   handleTrim(event) {
@@ -123,13 +150,12 @@ class Load extends Component {
   }
 
   handleUpdateVideo(event, value) {
-    let newDuration = this.refs.vidRef.duration
-    if (this.state.sliderValue[0] != value[0])
-        newDuration = (value[0]/100) * newDuration
-    else
-        newDuration = (value[1]/100) * newDuration
-    this.refs.vidRef.currentTime = newDuration 
-    console.log(newDuration)
+	if (value[0] != this.state.sliderValue[0]) {
+	  this.videoRef.currentTime = value[0];
+	} else {
+	  this.videoRef.currentTime = value[1];
+	}
+	console.log(value);
   }
 
   handleSliderValue(event, value) {
@@ -141,16 +167,19 @@ class Load extends Component {
 
   handleLoadVideo(event) {
     const videos = []
+	let path = '';
 
     for (const file of event.target.files) {
       console.log(file)
       videos.push([URL.createObjectURL(file), file]);
+	  path = file.path;
     }
 
     this.setState(state => ({
       ...state,
       videos,
-      status: 'loaded'
+	  currPath: path,
+     // status: 'loaded'
     }));
     console.log(this.state.videos)
     
@@ -169,7 +198,7 @@ class Load extends Component {
   renderVideo() {
     return this.state.videos.map(video => {
       return (
-        <video key={video[0]} ref="vidRef" width="100%" height="auto" controls>
+        <video key={video[0]} ref={this.vidRef} width="100%" height="auto" preload="metadata" controls>
           <source src={video[0]}/>
         </video>
       );
@@ -180,14 +209,16 @@ class Load extends Component {
     return (
       <Grid container key={this.state.sliderSet} alignItems="center" justify="center" spacing={2}>
           <Grid item xs>
-            <IconButton onClick={() => {this.refs.vidRef.play()}}>
+            <IconButton onClick={() => {this.videoRef.play()}}>
               <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
             </IconButton>
           </Grid>
           <Grid item xs={9}>
             <VideoSlider 
                 ThumbComponent={VideoThumbComponent}
-                defaultValue={[0,100]}    
+                defaultValue={[0,this.videoRef.duration]}    
+				max={this.videoRef.duration}
+				step={parseFloat((this.videoRef.duration/100).toPrecision(3))}
                 onChange={this.handleUpdateVideo}
                 onChangeCommitted={this.handleSliderValue}
             />
