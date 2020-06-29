@@ -5,6 +5,9 @@ import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import { createFFmpeg } from '@ffmpeg/ffmpeg';
 import { channels } from '../shared/constants';
 
+import Image from "../static/output.png";
+
+
 const { ipcRenderer } = window;
 var IS_ELECTRON = false;
 
@@ -14,17 +17,18 @@ if (navigator.userAgent.toLowerCase().indexOf(' electron/') > - 1) {
 
 const VideoSlider = withStyles({
   root: {
-    color: '#fcc603',
-    height: 6,
-    padding: '13px 0',
+    backgroundImage: `url(${Image})`,
+	backgroundRepeat: 'repeat',
+    height: 45,
+    padding: '0px 0',
   },
   thumb: {
     height: '45px',
     width: '12px',
     backgroundColor: '#fcc603',
-    border: '1px solid currentColor',
+    border: '1px solid #fcc603',
     borderRadius: "10%",
-    marginTop: -20,
+    marginTop: 0,
     '& .bar': {
       height: 20,
       width: 1,
@@ -36,14 +40,14 @@ const VideoSlider = withStyles({
   active: {
   },
   track: {
-    marginTop: -20,
-    color: '#fff',
+    backgroundColor: "transparent",
+    marginTop: 0,
     height: 41,
     border: "2px solid #fcc603",
   },
   rail: {
     color: '#d8d8d8',
-    opacity: 1,
+    opacity: 0.5,
     height: 3,
   },
 })(Slider);
@@ -63,6 +67,7 @@ class Load extends Component {
 
     this.state = {
       videos: [],
+	  thumbnails: [],
 	  currPath: '',
       sliderValue: [0,100],
 	  playbackRate: 1,
@@ -92,6 +97,23 @@ class Load extends Component {
   onVideoLoad = () => {
 	this.setState({status: 'loaded'});
 	console.log(this.videoRef.duration);
+	ipcRenderer.send(channels.GET_IMG, {
+	  sliderval: 2.5,
+	  duration: this.videoRef.duration,
+	  file: this.state.currPath,
+	});
+	ipcRenderer.on(channels.GET_IMG, (event, arg) => {
+      ipcRenderer.removeAllListeners(channels.GET_IMG);
+	  const { buffer } = arg;
+	  let thumbnails = this.state.thumbnails;
+	  var blob = new Blob([buffer], {type: "image/png"});
+	  var img_url = URL.createObjectURL(blob);
+	  thumbnails.push(img_url);
+	  this.setState({
+		thumbnails
+	  });
+	})
+
   }
 
   trimFFmpeg() {
@@ -101,13 +123,6 @@ class Load extends Component {
 
 	let videos = [];
 
-/*
-	ipcRenderer.send(channels.GET_IMG, {
-	  sliderval: sliderval,
-	  duration: duration,
-	  file: this.state.currPath,
-	});
-*/	
 	ipcRenderer.send(channels.FFMPEG_TRIM, {
 	  sliderval: sliderval,
 	  duration: duration,
@@ -155,7 +170,6 @@ class Load extends Component {
 	} else {
 	  this.videoRef.currentTime = value[1];
 	}
-	console.log(value);
   }
 
   handleSliderValue(event, value) {
@@ -195,6 +209,14 @@ class Load extends Component {
     }));
   }
 
+  renderThumbnails() {
+    return this.state.thumbnails.map(image => {
+	  return (
+		<img src={image}/>
+	  );
+	})
+  }
+
   renderVideo() {
     return this.state.videos.map(video => {
       return (
@@ -213,7 +235,7 @@ class Load extends Component {
               <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
             </IconButton>
           </Grid>
-          <Grid item xs={9}>
+          <Grid item key={this.state.thumbnails} xs={9}>
             <VideoSlider 
                 ThumbComponent={VideoThumbComponent}
                 defaultValue={[0,this.videoRef.duration]}    
@@ -278,6 +300,7 @@ class Load extends Component {
             </div>
           </Grid>
           {(this.state.status === 'loaded') && this.renderPlayer()}
+		  {this.renderThumbnails()}
         </Grid>
       </div>
     )
