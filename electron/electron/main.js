@@ -98,8 +98,8 @@ ipcMain.on(channels.FFMPEG_TRIM, (event, {sliderval, duration, file}) => {
   });
 });
 
-ipcMain.on(channels.GET_IMG, (event, {sliderval, duration, file}) => {
-  let from = 2.5;
+ipcMain.on(channels.GET_IMG, (event, {time, file}) => {
+  let from = time;
   output = require('path').dirname(file) + '\\output.png';
   console.log('get_img');
   console.log(from)
@@ -130,13 +130,12 @@ ipcMain.on(channels.GET_IMG, (event, {sliderval, duration, file}) => {
 	event.sender.send(channels.GET_IMG, {
 	  buffer: data,
 	});
-	fs.writeFileSync(output, data);
+	//fs.writeFileSync(output, data);
   });
 
   proc.stderr.setEncoding("utf8");
   proc.stderr.on('data', function(data) {
 	console.log(data)
-
 	//fs.writeFileSync(file, data);
   });
 

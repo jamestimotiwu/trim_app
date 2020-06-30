@@ -7,6 +7,8 @@ import { channels } from '../shared/constants';
 
 import Image from "../static/output.png";
 
+import ReactSlider from 'react-slider';
+import styled from 'styled-components';
 
 const { ipcRenderer } = window;
 var IS_ELECTRON = false;
@@ -35,20 +37,25 @@ const VideoSlider = withStyles({
       backgroundColor: '#000',
       marginLeft: 1,
       marginRight: 1,
-    }
+	  '&:hover': {
+	    backgroundColor: '#fff',
+	  },
+    },
+	'&:hover': {
+	  boxShadow: 'none',
+	}
   },
   active: {
   },
   track: {
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0,0,0,0)",
     marginTop: 0,
     height: 41,
     border: "2px solid #fcc603",
   },
   rail: {
-    color: '#d8d8d8',
-    opacity: 0.5,
-    height: 3,
+	backgroundColor: "rgba(255,255,255,0.7)",
+    height: 45,
   },
 })(Slider);
 
@@ -97,9 +104,33 @@ class Load extends Component {
   onVideoLoad = () => {
 	this.setState({status: 'loaded'});
 	console.log(this.videoRef.duration);
+
+	let seek_skip = this.videoRef.duration/10;
+	let thumbnails = [];
+	let curr_seek = 0;
+	for (let i = 0; i < 10; i++) {
+	  console.log(curr_seek);
+	  ipcRenderer.send(channels.GET_IMG, {
+		time: curr_seek,
+		file: this.state.currPath,
+	  });
+	  curr_seek = curr_seek + seek_skip;
+	}
+	ipcRenderer.on(channels.GET_IMG, (event, arg) => {
+	  const { buffer } = arg;
+	  var blob = new Blob([buffer], {type: "image/png"});
+	  var img_url = URL.createObjectURL(blob);
+	  thumbnails.push(img_url);
+	  this.setState({
+		thumbnails
+	  });
+	})
+
+	// TODO: Must remove all listeners after done
+    // ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
+/*
 	ipcRenderer.send(channels.GET_IMG, {
-	  sliderval: 2.5,
-	  duration: this.videoRef.duration,
+	  time: 2.5,
 	  file: this.state.currPath,
 	});
 	ipcRenderer.on(channels.GET_IMG, (event, arg) => {
@@ -113,7 +144,7 @@ class Load extends Component {
 		thumbnails
 	  });
 	})
-
+*/
   }
 
   trimFFmpeg() {
@@ -201,18 +232,20 @@ class Load extends Component {
   
   handleCancelTrim(event) {
     const videos = []
+	const thumbnails = []
 
     this.setState(state => ({
       ...state,
+	  thumbnails,
       videos,
       status: 'pending'
     }));
   }
 
   renderThumbnails() {
-    return this.state.thumbnails.map(image => {
+    return this.state.thumbnails.map(img => {
 	  return (
-		<img src={image}/>
+		<img src={img}/>
 	  );
 	})
   }
@@ -228,6 +261,16 @@ class Load extends Component {
   }
 
   renderPlayer() {
+	const StyledSlider = styled(ReactSlider)` 
+	  width: 750px;
+	  padding: '0px 0';
+	  max-width: 800px;
+	  background-image: url(${this.state.thumbnails.length > 0 ? this.state.thumbnails[0] : Image});
+	  background-repeat: 'repeat';
+	  height: 45px;
+	  border: 1px solid grey;
+	`;
+
     return (
       <Grid container key={this.state.sliderSet} alignItems="center" justify="center" spacing={2}>
           <Grid item xs>
@@ -236,14 +279,15 @@ class Load extends Component {
             </IconButton>
           </Grid>
           <Grid item key={this.state.thumbnails} xs={9}>
-            <VideoSlider 
-                ThumbComponent={VideoThumbComponent}
-                defaultValue={[0,this.videoRef.duration]}    
-				max={this.videoRef.duration}
-				step={parseFloat((this.videoRef.duration/100).toPrecision(3))}
-                onChange={this.handleUpdateVideo}
-                onChangeCommitted={this.handleSliderValue}
-            />
+			<StyledSlider
+			  className="horizontal-slider"
+			  thumbClassName="example-thumb"
+			  trackClassName="example-track"
+			  defaultValue={[0, 100]}
+			  ariaLabel={["Leftmost thumb", "Rightmost thumb"]}
+			  pearling
+			  minDistance={1}
+			/>
           </Grid>
           <Grid item xs spacing={5}>
             <Button variant="outlined" 
@@ -306,5 +350,27 @@ class Load extends Component {
     )
   }
 }
-
+/*
+            <VideoSlider 
+                ThumbComponent={VideoThumbComponent}
+                defaultValue={[0,this.videoRef.duration]}    
+				max={this.videoRef.duration}
+				step={parseFloat((this.videoRef.duration/100).toPrecision(2))}
+                onChange={this.handleUpdateVideo}
+                onChangeCommitted={this.handleSliderValue}
+            />*/
+          /*
+		  <Grid item xs={12}>
+            <div key={this.state.duration}>
+			  <StyledSlider
+			    className="horizontal-slider"
+				thumbClassName="example-thumb"
+				trackClassName="example-track"
+				defaultValue={[0, 100]}
+				ariaLabel={["Leftmost thumb", "Rightmost thumb"]}
+				pearling
+				minDistance={1}
+			  />
+            </div>
+          </Grid>*/
 export default Load;
