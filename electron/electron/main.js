@@ -126,7 +126,7 @@ ipcMain.on(channels.GET_IMG, (event, {time, file}) => {
   var proc = spawn(ffmpegPath, args)
 
   proc.stdout.on('data', function(data) {
-    console.log(data);
+    //console.log(data);
 	event.sender.send(channels.GET_IMG, {
 	  buffer: data,
 	});
@@ -135,7 +135,7 @@ ipcMain.on(channels.GET_IMG, (event, {time, file}) => {
 
   proc.stderr.setEncoding("utf8");
   proc.stderr.on('data', function(data) {
-	console.log(data)
+	//console.log(data)
 	//fs.writeFileSync(file, data);
   });
 

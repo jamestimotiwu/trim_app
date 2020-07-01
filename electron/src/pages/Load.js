@@ -108,6 +108,8 @@ class Load extends Component {
 	let seek_skip = this.videoRef.duration/10;
 	let thumbnails = [];
 	let curr_seek = 0;
+
+	/*
 	for (let i = 0; i < 10; i++) {
 	  console.log(curr_seek);
 	  ipcRenderer.send(channels.GET_IMG, {
@@ -121,52 +123,32 @@ class Load extends Component {
 	  var blob = new Blob([buffer], {type: "image/png"});
 	  var img_url = URL.createObjectURL(blob);
 	  thumbnails.push(img_url);
-	  this.setState({
-		thumbnails
-	  });
-	})
-
-	// TODO: Must remove all listeners after done
-    // ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
-/*
-	ipcRenderer.send(channels.GET_IMG, {
-	  time: 2.5,
-	  file: this.state.currPath,
-	});
-	ipcRenderer.on(channels.GET_IMG, (event, arg) => {
-      ipcRenderer.removeAllListeners(channels.GET_IMG);
-	  const { buffer } = arg;
-	  let thumbnails = this.state.thumbnails;
-	  var blob = new Blob([buffer], {type: "image/png"});
-	  var img_url = URL.createObjectURL(blob);
-	  thumbnails.push(img_url);
-	  this.setState({
-		thumbnails
-	  });
+	  if (thumbnails.length > 9) {
+        ipcRenderer.removeAllListeners(channels.GET_IMG);
+		this.setState({
+		  thumbnails
+		});
+	  }
 	})
 */
+	// TODO: Must remove all listeners after done
+    // ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
   }
 
   trimFFmpeg() {
-	const duration = this.videoRef.duration
-	const sliderval = this.state.sliderValue
-	const file = this.state.videos[0][1]
-
 	let videos = [];
 
 	ipcRenderer.send(channels.FFMPEG_TRIM, {
-	  sliderval: sliderval,
-	  duration: duration,
+	  sliderval: this.state.sliderValue,
+	  duration: this.videoRef.duration,
 	  file: this.state.currPath,
 	});
 	
 	ipcRenderer.on(channels.FFMPEG_TRIM, (event, arg) => {
       ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
 	  const { out } = arg;
-	  console.log(out)
       const blob = URL.createObjectURL(new Blob([out],{ type: 'video/quicktime' }))
 	  videos.push([blob, new File([blob], "filename.mov", {type: 'video/quicktime'})]);
-	  console.log(videos)
 	  this.setState(state => ({
 		...state,
 		videos,
@@ -242,8 +224,21 @@ class Load extends Component {
     }));
   }
 
+  renderNewThumbnails() {
+	let seek_skip = this.videoRef.duration/10;
+	let curr_seek = 0
+	const thumbs = []
+
+	for (let i = 0; i < 10; i++) {
+		thumbs.push(<video preload="metadata" width="80" height="45" src={this.state.videos[0][0] + "#t=" + curr_seek}></video>)
+		curr_seek = curr_seek + seek_skip;
+	}
+
+	return thumbs;
+  }
+
   renderThumbnails() {
-    return this.state.thumbnails.map(img => {
+	return this.state.thumbnails.map(img => {
 	  return (
 		<img src={img}/>
 	  );
@@ -261,11 +256,11 @@ class Load extends Component {
   }
 
   renderPlayer() {
+    /* Currently, testing out bg image directly into html rather than injected into the css, so by default setting bg image does nothing */
 	const StyledSlider = styled(ReactSlider)` 
-	  width: 750px;
-	  padding: '0px 0';
+	  width: 800px;
 	  max-width: 800px;
-	  background-image: url(${this.state.thumbnails.length > 0 ? this.state.thumbnails[0] : Image});
+	  background-image: url(${this.state.thumbnails.length > 0 ? "" : ""});
 	  background-repeat: 'repeat';
 	  height: 45px;
 	  border: 1px solid grey;
@@ -278,7 +273,10 @@ class Load extends Component {
               <PlayArrowIcon variant="contained" style={{fontSize:40}}/>
             </IconButton>
           </Grid>
-          <Grid item key={this.state.thumbnails} xs={9}>
+          <Grid item style={{position: "relative"}} xs={9}>
+			<div style={{overflow: "hidden", height: "100%", width: 1000, position: "absolute", top: 9, left: 10}}>
+		      {this.renderNewThumbnails()}
+			</div>
 			<StyledSlider
 			  className="horizontal-slider"
 			  thumbClassName="example-thumb"
@@ -290,10 +288,11 @@ class Load extends Component {
 			/>
           </Grid>
           <Grid item xs spacing={5}>
-            <Button variant="outlined" 
+            <Button variant="contained" 
+				color="primary"
                 component="span"
                 size="small"
-                style={{textTransform:"None"}}
+                style={{margin: "0px 40px 0",textTransform:"None"}}
                 onClick={this.handleTrim}
                 >
               Trim
@@ -301,7 +300,7 @@ class Load extends Component {
             <Button variant="outlined" 
                 component="span"
                 size="small"
-                style={{textTransform:"None"}}
+                style={{margin: "0px 40px 0",textTransform:"None"}}
                 onClick={this.handleCancelTrim}
                 >
               Cancel
@@ -344,7 +343,6 @@ class Load extends Component {
             </div>
           </Grid>
           {(this.state.status === 'loaded') && this.renderPlayer()}
-		  {this.renderThumbnails()}
         </Grid>
       </div>
     )
@@ -359,18 +357,5 @@ class Load extends Component {
                 onChange={this.handleUpdateVideo}
                 onChangeCommitted={this.handleSliderValue}
             />*/
-          /*
-		  <Grid item xs={12}>
-            <div key={this.state.duration}>
-			  <StyledSlider
-			    className="horizontal-slider"
-				thumbClassName="example-thumb"
-				trackClassName="example-track"
-				defaultValue={[0, 100]}
-				ariaLabel={["Leftmost thumb", "Rightmost thumb"]}
-				pearling
-				minDistance={1}
-			  />
-            </div>
-          </Grid>*/
+
 export default Load;
