@@ -4,6 +4,13 @@
   height: 30px;
 }
 
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
 
 .horizontal-slider {
   width: 800px;

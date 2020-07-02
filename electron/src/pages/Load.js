@@ -17,57 +17,6 @@ if (navigator.userAgent.toLowerCase().indexOf(' electron/') > - 1) {
   IS_ELECTRON = true;
 }
 
-const VideoSlider = withStyles({
-  root: {
-    backgroundImage: `url(${Image})`,
-	backgroundRepeat: 'repeat',
-    height: 45,
-    padding: '0px 0',
-  },
-  thumb: {
-    height: '45px',
-    width: '12px',
-    backgroundColor: '#fcc603',
-    border: '1px solid #fcc603',
-    borderRadius: "10%",
-    marginTop: 0,
-    '& .bar': {
-      height: 20,
-      width: 1,
-      backgroundColor: '#000',
-      marginLeft: 1,
-      marginRight: 1,
-	  '&:hover': {
-	    backgroundColor: '#fff',
-	  },
-    },
-	'&:hover': {
-	  boxShadow: 'none',
-	}
-  },
-  active: {
-  },
-  track: {
-    backgroundColor: "rgba(0,0,0,0)",
-    marginTop: 0,
-    height: 41,
-    border: "2px solid #fcc603",
-  },
-  rail: {
-	backgroundColor: "rgba(255,255,255,0.7)",
-    height: 45,
-  },
-})(Slider);
-
-function VideoThumbComponent(props) {
-  return (
-	<span {...props}>
-	  <span className="bar" />
-	  <span className="bar" />
-	</span>
-  );
-}
-
 class Load extends Component {
   constructor(props) {
     super(props);   
@@ -83,12 +32,13 @@ class Load extends Component {
     };
 
 	this.videoRef = null
+	this.thVidRef = null
+	this.canvasRef = React.createRef();
 	
 	window.addEventListener('keydown', this.handleOnKeyDown);
     //this.loadFFmpeg()
     this.handleLoadVideo = this.handleLoadVideo.bind(this);
     this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
-    this.handleSliderValue = this.handleSliderValue.bind(this);
     this.handleCancelTrim = this.handleCancelTrim.bind(this);
     this.handleTrim = this.handleTrim.bind(this);
   }
@@ -101,38 +51,43 @@ class Load extends Component {
 	}
   }
 
+  thumbVidRef = ref => {
+	var ctx = this.canvasRef.current.getContext('2d');
+	this.canvasRef.current.height = 45;
+	this.canvasRef.current.width = 80;
+	let seek_skip = this.videoRef.duration/9;
+	let curr_time = 0;
+	let thumbnails = [];
+
+	if(ref != null) {
+	  this.thVidRef = ref;
+	  this.thVidRef.currentTime = 0.1;
+	  this.thVidRef.addEventListener('seeked', () => {
+		ctx.drawImage(this.thVidRef, 0, 0, 80, 45);
+
+		if(isNaN(seek_skip)) {
+		  seek_skip = this.thVidRef.duration/9;
+		  console.log(seek_skip)
+		}
+	    this.canvasRef.current.toBlob((blob) => {
+		  const blob_link = URL.createObjectURL(blob);
+		  thumbnails.push(blob_link);
+		  
+		  this.setState({
+			thumbnails,
+		  });
+		}, 'image/jpeg');
+
+		curr_time = curr_time + seek_skip;
+		if (curr_time <= this.thVidRef.duration) {
+		  this.thVidRef.currentTime = curr_time;
+		}
+	  });
+	}
+  }
+
   onVideoLoad = () => {
 	this.setState({status: 'loaded'});
-	console.log(this.videoRef.duration);
-
-	let seek_skip = this.videoRef.duration/10;
-	let thumbnails = [];
-	let curr_seek = 0;
-
-	/*
-	for (let i = 0; i < 10; i++) {
-	  console.log(curr_seek);
-	  ipcRenderer.send(channels.GET_IMG, {
-		time: curr_seek,
-		file: this.state.currPath,
-	  });
-	  curr_seek = curr_seek + seek_skip;
-	}
-	ipcRenderer.on(channels.GET_IMG, (event, arg) => {
-	  const { buffer } = arg;
-	  var blob = new Blob([buffer], {type: "image/png"});
-	  var img_url = URL.createObjectURL(blob);
-	  thumbnails.push(img_url);
-	  if (thumbnails.length > 9) {
-        ipcRenderer.removeAllListeners(channels.GET_IMG);
-		this.setState({
-		  thumbnails
-		});
-	  }
-	})
-*/
-	// TODO: Must remove all listeners after done
-    // ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
   }
 
   trimFFmpeg() {
@@ -154,6 +109,7 @@ class Load extends Component {
 		videos,
 		sliderValue: [0,100],
 		sliderSet: (!this.state.sliderSet),
+		thumbnails: [],
 		status: 'loaded'
 	  }));
 	  ipcRenderer.send(channels.SET_TEMP_VIDEO, {
@@ -177,19 +133,12 @@ class Load extends Component {
     this.trimFFmpeg(); 
   }
 
-  handleUpdateVideo(event, value) {
-	if (value[0] != this.state.sliderValue[0]) {
-	  this.videoRef.currentTime = value[0];
+  handleUpdateVideo(val) {
+	if (val[0] != this.state.sliderValue[0]) {
+	  this.videoRef.currentTime = val[0];
 	} else {
-	  this.videoRef.currentTime = value[1];
+	  this.videoRef.currentTime = val[1];
 	}
-  }
-
-  handleSliderValue(event, value) {
-    this.setState(state => ({
-      ...state,
-      sliderValue: value,
-    }));
   }
 
   handleLoadVideo(event) {
@@ -219,28 +168,25 @@ class Load extends Component {
     this.setState(state => ({
       ...state,
 	  thumbnails,
+	  sliderValue: [0, 100],
       videos,
       status: 'pending'
     }));
   }
 
   renderNewThumbnails() {
-	let seek_skip = this.videoRef.duration/10;
-	let curr_seek = 0
-	const thumbs = []
-
-	for (let i = 0; i < 10; i++) {
-		thumbs.push(<video preload="metadata" width="80" height="45" src={this.state.videos[0][0] + "#t=" + curr_seek}></video>)
-		curr_seek = curr_seek + seek_skip;
-	}
-
-	return thumbs;
+	return this.state.videos.map(video => {
+	  return (
+		<video style={{display: "none"}} ref={this.thumbVidRef} preload="metadata" width="80" height="45" src={this.state.videos[0][0]}></video>
+	  );
+    })
   }
+  
 
   renderThumbnails() {
 	return this.state.thumbnails.map(img => {
 	  return (
-		<img src={img}/>
+		<img className="no-select" draggable="false" src={img}/>
 	  );
 	})
   }
@@ -276,15 +222,21 @@ class Load extends Component {
           <Grid item style={{position: "relative"}} xs={9}>
 			<div style={{overflow: "hidden", height: "100%", width: 1000, position: "absolute", top: 9, left: 10}}>
 		      {this.renderNewThumbnails()}
+			  {this.renderThumbnails()}
 			</div>
 			<StyledSlider
 			  className="horizontal-slider"
 			  thumbClassName="example-thumb"
 			  trackClassName="example-track"
-			  defaultValue={[0, 100]}
+              onChange={val => this.handleUpdateVideo(val)}
+			  onAfterChange={val => {this.setState({sliderValue: val})} }
+			  value={this.state.sliderValue}
+			  min={0}
+			  max={this.videoRef.duration}
+			  step={parseFloat((this.videoRef.duration/100).toPrecision(2))}
 			  ariaLabel={["Leftmost thumb", "Rightmost thumb"]}
 			  pearling
-			  minDistance={1}
+			  minDistance={0}
 			/>
           </Grid>
           <Grid item xs spacing={5}>
@@ -315,6 +267,7 @@ class Load extends Component {
     return (
       <div>
         <Grid container alignItems="center" justify="center" spacing={1}>
+		  <canvas style={{display: "none"}} ref={this.canvasRef}/>
           <Grid item xs={12}>
           {(this.state.status === 'pending') && 
             (<div style={{margin:"0 auto",paddingTop: "10em"}} id="file-load">
@@ -348,14 +301,5 @@ class Load extends Component {
     )
   }
 }
-/*
-            <VideoSlider 
-                ThumbComponent={VideoThumbComponent}
-                defaultValue={[0,this.videoRef.duration]}    
-				max={this.videoRef.duration}
-				step={parseFloat((this.videoRef.duration/100).toPrecision(2))}
-                onChange={this.handleUpdateVideo}
-                onChangeCommitted={this.handleSliderValue}
-            />*/
 
 export default Load;
