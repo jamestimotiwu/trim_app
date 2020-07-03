@@ -8,6 +8,7 @@ class VideoGrid extends Component {
 		this.state = {
 			videos: [],
 			thumbs: [],
+			loadThumb: false,
 		}
 		this.canvasRef = React.createRef();
 		this.thVidRef = null
@@ -22,8 +23,8 @@ class VideoGrid extends Component {
 			this.thVidRef = ref;
 			this.thVidRef.addEventListener('loadedmetadata', () => {
 			  console.log(this.thVidRef.videoHeight);
-				this.canvasRef.current.height = this.thVidRef.videoHeight/3;
-				this.canvasRef.current.width = this.thVidRef.videoWidth/3;
+				this.canvasRef.current.height = this.thVidRef.videoHeight/2;
+				this.canvasRef.current.width = this.thVidRef.videoWidth/2;
 				this.thVidRef.currentTime = 0.5;
 			});
 
@@ -39,6 +40,7 @@ class VideoGrid extends Component {
 					
 					this.setState({
 						thumbs,
+						loadThumb: false,
 					});
 				}, 'image/jpeg');
 				
@@ -48,8 +50,10 @@ class VideoGrid extends Component {
 
 	renderVideoThumb() {
 		if (this.state.videos.length > 0) {
-			return ( 
-				<video style={{display: "none"}} ref={this.thumbVidRef} preload="metadata" width="100%" height="auto" src={this.state.videos[this.state.videos.length - 1][0]}></video>
+			return this.state.loadThumb && ( 
+				<Grid item xs={4}>
+					<video ref={this.thumbVidRef} preload="metadata" width="100%" height="auto" src={this.state.videos[this.state.videos.length - 1][0]}></video>
+				</Grid>
 			)
 		}
 	}
@@ -87,6 +91,7 @@ class VideoGrid extends Component {
     this.setState(state => ({
       ...state,
       videos,
+			loadThumb: true,
     }));
     console.log(this.state.videos)
 		 
@@ -117,8 +122,8 @@ class VideoGrid extends Component {
 							/>
 						</div>
 					</Grid>
-					{this.renderVideoThumb()}
 					{this.renderImageGrid()}
+					{this.renderVideoThumb()}
 
 				</Grid>
 			</div>
