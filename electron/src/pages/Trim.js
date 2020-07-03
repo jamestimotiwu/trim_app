@@ -168,7 +168,7 @@ class Trim extends Component {
   componentWillMount() {
     const { video } = this.props;
     const videos = [];
-    const path = video[1].path
+    const path = video.file.path
     videos.push(video);
 
     this.setState(state => ({
@@ -193,7 +193,7 @@ class Trim extends Component {
   renderNewThumbnails() {
 		return this.state.videos.map(video => {
 			return (
-			<video style={{display: "none"}} ref={this.thumbVidRef} preload="metadata" width="80" height="45" src={video[0]}></video>
+			<video style={{display: "none"}} ref={this.thumbVidRef} preload="metadata" width="80" height="45" src={video.blob}></video>
 			);
 		})
   }
@@ -210,8 +210,8 @@ class Trim extends Component {
   renderVideo() {
     return this.state.videos.map(video => {
       return (
-        <video key={video[0]} ref={this.vidRef} width="100%" height="auto" preload="metadata" controls>
-          <source src={video[0]}/>
+        <video poster={video.thumbnail} ref={this.vidRef} width="100%" height="auto" preload="metadata" controls>
+          <source src={video.blob}/>
         </video>
       );
     })

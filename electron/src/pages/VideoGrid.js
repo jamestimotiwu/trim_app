@@ -8,8 +8,7 @@ class VideoGrid extends Component {
 
 		this.state = {
 			videos: [],
-			thumbs: [],
-			loadThumb: false,
+      thumbnails: [],
 		}
 		this.canvasRef = React.createRef();
 		this.thVidRef = null
@@ -23,6 +22,7 @@ class VideoGrid extends Component {
 		
 		if (ref != null) {
 			this.thVidRef = ref;
+      console.log(this.thVidRef.id)
 			this.thVidRef.addEventListener('loadedmetadata', () => {
 			  console.log(this.thVidRef.videoHeight);
 				this.canvasRef.current.height = this.thVidRef.videoHeight/2;
@@ -35,14 +35,20 @@ class VideoGrid extends Component {
 											this.canvasRef.current.width,
 											this.canvasRef.current.height);
 				this.canvasRef.current.toBlob((blob) => {
+          const vidRefId = this.thVidRef.id;
 				  console.log(blob);
-					let thumbs = this.state.thumbs;
+
+          // Use thumbnail property in video
+					let thumbnails = this.state.thumbnails;
+          let videos = this.state.videos;
 					const blob_link = URL.createObjectURL(blob);
-					thumbs.push(blob_link);
-					
+					//thumbs.push(blob_link);
+          videos[vidRefId].thumbnail = blob_link;
+					thumbnails[vidRefId] = blob_link;
+
 					this.setState({
-						thumbs,
-						loadThumb: false,
+						videos,
+            thumbnails,
 					});
 				}, 'image/jpeg');
 				
@@ -54,7 +60,7 @@ class VideoGrid extends Component {
 		if (this.state.videos.length > 0) {
 			return this.state.loadThumb && ( 
 				<Grid item xs={4}>
-					<video ref={this.thumbVidRef} preload="metadata" width="100%" height="auto" src={this.state.videos[this.state.videos.length - 1][0]}></video>
+					<video ref={this.thumbVidRef} preload="metadata" width="100%" height="auto" src={this.state.videos[this.state.videos.length - 1].blob}></video>
 				</Grid>
 			)
 		}
@@ -64,6 +70,8 @@ class VideoGrid extends Component {
     this.props.onImageClick(this.state.videos[i])
   }
 
+
+/*
 	renderImageGrid() {
 		return this.state.thumbs.map((thumb, i) => {
 			return (
@@ -78,13 +86,34 @@ class VideoGrid extends Component {
 			);
 		});
 	}
+*/
+
+  renderImageGrid() {
+    return this.state.videos.map((video, i) => {
+      return video.thumbnail === null ? (
+        <Grid item xs={4}>
+          <video id={i} ref={this.thumbVidRef} preload="metadata" width="100%" height="auto" src={video.blob}></video>
+        </Grid>
+      ) :
+      (
+        <Grid item xs={4}>
+					<img 
+            className="no-select"
+            onClick={(e) => this.handleImageClick(i)} 
+            width="100%" 
+            height="auto" 
+            src={video.thumbnail}/>
+        </Grid>
+      );
+    });
+  }
 
 	renderVideoGrid() {
 		return this.state.videos.map(video => {
 			return (
 				<Grid item xs={4}>
 					<video width="100%" height="auto" preload="metadata">
-						<source src={video[0]}/>
+						<source src={video.blob}/>
 					</video>
 				</Grid>
 			);
@@ -96,13 +125,19 @@ class VideoGrid extends Component {
 
     for (const file of event.target.files) {
       console.log(file)
-      videos.push([URL.createObjectURL(file), file]);
+      videos.push({
+        blob: URL.createObjectURL(file), 
+        file: file,
+        thumbnail: null,
+      });
     }
+    let thumbnails = this.state.thumbnails;
+    thumbnails.push(null);
 
     this.setState(state => ({
       ...state,
       videos,
-			loadThumb: true,
+      thumbnails,
     }));
     console.log(this.state.videos)
 		 
@@ -134,7 +169,6 @@ class VideoGrid extends Component {
 						</div>
 					</Grid>
 					{this.renderImageGrid()}
-					{this.renderVideoThumb()}
 
 				</Grid>
 			</div>
