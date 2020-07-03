@@ -1,20 +1,13 @@
 import React, { Component } from 'react';
-import { Typography, Button, IconButton, Input, Grid} from '@material-ui/core';
+import { Button, IconButton, Grid} from '@material-ui/core';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import { createFFmpeg } from '@ffmpeg/ffmpeg';
 import { channels } from '../shared/constants';
 
-import Image from "../static/output.png";
 import './Trim.css';
 
 import ReactSlider from 'react-slider';
 
 const { ipcRenderer } = window;
-var IS_ELECTRON = false;
-
-if (navigator.userAgent.toLowerCase().indexOf(' electron/') > - 1) {
-  IS_ELECTRON = true;
-}
 
 class Trim extends Component {
   constructor(props) {
@@ -50,11 +43,10 @@ class Trim extends Component {
 		}
   }
 
-	componentDidMount() {
-		console.log(this.props.match.params.videoPath)
-	}
-
   thumbVidRef = ref => {
+    if (this.canvasRef.current === null) {
+      return;
+    }
 		var ctx = this.canvasRef.current.getContext('2d');
 		this.canvasRef.current.height = 45;
 		this.canvasRef.current.width = 80;
@@ -72,6 +64,11 @@ class Trim extends Component {
 					seek_skip = this.thVidRef.duration/9;
 					console.log(seek_skip)
 				}
+
+        // Null check canvasref again
+        if(this.canvasRef.current === null) {
+          return;
+        }
 				this.canvasRef.current.toBlob((blob) => {
 					const blob_link = URL.createObjectURL(blob);
 					thumbnails.push(blob_link);
@@ -124,10 +121,10 @@ class Trim extends Component {
 
   handleOnKeyDown = (e) => {
 		if (this.videoRef) {
-			if (e.key == 'l') {
+			if (e.key === 'l') {
 			this.videoRef.playbackRate += 0.25;
 			}
-			if (e.key == 'j') {
+			if (e.key === 'j') {
 			this.videoRef.playbackRate -= 0.25;
 			}
 		}
@@ -141,7 +138,7 @@ class Trim extends Component {
   }
 
   handleUpdateVideo(val) {
-		if (val[0] != this.state.sliderValue[0]) {
+		if (val[0] !== this.state.sliderValue[0]) {
 			this.videoRef.currentTime = val[0];
 		} else {
 			this.videoRef.currentTime = val[1];
@@ -167,18 +164,30 @@ class Trim extends Component {
     console.log(this.state.videos)
     
   }
-  
-  handleCancelTrim(event) {
-    const videos = []
-		const thumbnails = []
+
+  componentWillMount() {
+    const { video } = this.props;
+    const videos = [];
+    const path = video[1].path
+    videos.push(video);
 
     this.setState(state => ({
+      ...state,
+      videos,
+      currPath: path,
+    }))
+  }
+  
+  handleCancelTrim(event) {
+    this.setState(state => ({
 			...state,
-			thumbnails,
+			thumbnails: [],
 			sliderValue: [0, 100],
-			videos,
+			videos: [],
 			status: 'pending'
     }));
+
+    this.props.onCancel();
   }
 
   renderNewThumbnails() {

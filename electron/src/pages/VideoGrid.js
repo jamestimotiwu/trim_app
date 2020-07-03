@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { Typography, Button, IconButton, Input, Grid} from '@material-ui/core';
+import { Button, Grid} from '@material-ui/core';
+import './Trim.css'
 
 class VideoGrid extends Component {
     constructor(props) {
@@ -14,6 +15,7 @@ class VideoGrid extends Component {
 		this.thVidRef = null
 
 		this.handleLoadVideo = this.handleLoadVideo.bind(this);
+		this.handleImageClick = this.handleImageClick.bind(this);
 	}
   
 	thumbVidRef = ref => {
@@ -58,11 +60,20 @@ class VideoGrid extends Component {
 		}
 	}
 
+  handleImageClick = (i) => {
+    this.props.onImageClick(this.state.videos[i])
+  }
+
 	renderImageGrid() {
-		return this.state.thumbs.map(thumb => {
+		return this.state.thumbs.map((thumb, i) => {
 			return (
 				<Grid item xs={4}>
-					<img width="100%" height="auto" src={thumb}/>
+					<img 
+            className="no-select"
+            onClick={(e) => this.handleImageClick(i)} 
+            width="100%" 
+            height="auto" 
+            src={thumb}/>
 				</Grid>
 			);
 		});
