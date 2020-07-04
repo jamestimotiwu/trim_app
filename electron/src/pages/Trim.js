@@ -14,7 +14,7 @@ class Trim extends Component {
     super(props);   
 
     this.state = {
-      videos: [],
+      video: null,
 			thumbnails: [],
 			currPath: '',
       sliderValue: [0,100],
@@ -28,8 +28,6 @@ class Trim extends Component {
 		this.canvasRef = React.createRef();
 	
 		window.addEventListener('keydown', this.handleOnKeyDown);
-			//this.loadFFmpeg()
-		this.handleLoadVideo = this.handleLoadVideo.bind(this);
 		this.handleUpdateVideo = this.handleUpdateVideo.bind(this);
 		this.handleCancelTrim = this.handleCancelTrim.bind(this);
 		this.handleTrim = this.handleTrim.bind(this);
@@ -62,7 +60,6 @@ class Trim extends Component {
 
 				if(isNaN(seek_skip)) {
 					seek_skip = this.thVidRef.duration/9;
-					console.log(seek_skip)
 				}
 
         // Null check canvasref again
@@ -91,8 +88,6 @@ class Trim extends Component {
   }
 
   trimFFmpeg() {
-		let videos = [];
-
 		ipcRenderer.send(channels.FFMPEG_TRIM, {
 			sliderval: this.state.sliderValue,
 			duration: this.videoRef.duration,
@@ -101,17 +96,26 @@ class Trim extends Component {
 	
 		ipcRenderer.on(channels.FFMPEG_TRIM, (event, arg) => {
 				ipcRenderer.removeAllListeners(channels.FFMPEG_TRIM);
-			const { out } = arg;
+			  const { out } = arg;
 				const blob = URL.createObjectURL(new Blob([out],{ type: 'video/quicktime' }))
-				videos.push([blob, new File([blob], "filename.mov", {type: 'video/quicktime'})]);
+				const video = {
+          id: this.state.video.id,
+          blob: blob,
+          file: new File([blob], "filename.mov", {type: 'video/quicktime'}),
+          thumbnail: this.state.video.thumbnail,
+        };
+
 				this.setState(state => ({
 					...state,
-					videos,
+          video,
 					sliderValue: [0,100],
 					sliderSet: (!this.state.sliderSet),
 					thumbnails: [],
 					status: 'loaded'
 				}));
+
+        this.props.onSetVideo(this.state.video.id, video);
+
 				ipcRenderer.send(channels.SET_TEMP_VIDEO, {
 					file: this.state.currPath,
 			});
@@ -132,8 +136,6 @@ class Trim extends Component {
   }
 
   handleTrim(event) {
-    console.log(this.state.videos)
-    console.log(this.state.videos[0][1])
     this.trimFFmpeg(); 
   }
 
@@ -145,37 +147,17 @@ class Trim extends Component {
 		}
   }
 
-  handleLoadVideo(event) {
-    const videos = []
-		let path = '';
-
-    for (const file of event.target.files) {
-      console.log(file)
-      videos.push([URL.createObjectURL(file), file]);
-	    path = file.path;
-    }
-
-    this.setState(state => ({
-      ...state,
-      videos,
-	  currPath: path,
-     // status: 'loaded'
-    }));
-    console.log(this.state.videos)
-    
-  }
-
   componentWillMount() {
-    const { video } = this.props;
-    const videos = [];
-    const path = video.file.path
-    videos.push(video);
+    if (this.state.video === null) {
+      const { video } = this.props;
+      const path = video.file.path
 
-    this.setState(state => ({
-      ...state,
-      videos,
-      currPath: path,
-    }))
+      this.setState(state => ({
+        ...state,
+        video,
+        currPath: path,
+      }))
+    }
   }
   
   handleCancelTrim(event) {
@@ -185,7 +167,6 @@ class Trim extends Component {
 			...state,
 			thumbnails: [],
 			sliderValue: [0, 100],
-			videos: [],
 			status: 'pending'
     }));
 
@@ -193,11 +174,9 @@ class Trim extends Component {
   }
 
   renderNewThumbnails() {
-		return this.state.videos.map(video => {
-			return (
-			<video style={{display: "none"}} ref={this.thumbVidRef} preload="metadata" width="80" height="45" src={video.blob}></video>
-			);
-		})
+		return (
+			<video style={{display: "none"}} ref={this.thumbVidRef} preload="metadata" width="80" height="45" src={this.state.video.blob}></video>
+		);
   }
   
 
@@ -210,13 +189,11 @@ class Trim extends Component {
   }
 
   renderVideo() {
-    return this.state.videos.map(video => {
-      return (
-        <video poster={video.thumbnail} ref={this.vidRef} width="100%" height="auto" preload="metadata" controls>
-          <source src={video.blob}/>
-        </video>
-      );
-    })
+    return (
+      <video poster={this.state.video.thumbnail} ref={this.vidRef} width="100%" height="auto" preload="metadata" controls>
+        <source src={this.state.video.blob}/>
+      </video>
+    );
   }
 
   renderPlayer() {
@@ -299,7 +276,7 @@ class Trim extends Component {
             </div>)}
           </Grid>
           <Grid item xs={12}>
-            <div id="video-render">
+            <div key={this.state.sliderSet} id="video-render">
               {this.renderVideo()}
             </div>
           </Grid>

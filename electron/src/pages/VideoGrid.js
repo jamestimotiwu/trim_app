@@ -8,7 +8,6 @@ class VideoGrid extends Component {
     super(props); 
 
 		this.state = {
-			videos: [],
       thumbnails: [],
 		}
 		this.canvasRef = React.createRef();
@@ -20,18 +19,18 @@ class VideoGrid extends Component {
   
 
   handleImageClick = (i) => {
-    this.props.onImageClick(this.state.videos[i])
+    this.props.onImageClick(i)
   }
 
   renderImageGrid() {
-    return this.state.videos.map(video => {
+    return this.props.videos.map(video => {
       return (
         <Grid item xs={4}>
           <VideoGridItem
             video={video}
-            onNewThumbnail={(id, thumbnail) => this.handleNewThumbnail(id, thumbnail)}
+            onNewThumbnail={(id, thumbnail) => this.props.onSetThumbnail(id, thumbnail)}
             canvasRef={this.canvasRef}
-            onImageClick={(i) => this.props.onImageClick(this.state.videos[i])}
+            onImageClick={(i) => this.props.onImageClick(i)}
           />
         </Grid>
       )
@@ -39,7 +38,7 @@ class VideoGrid extends Component {
   }
 
 	renderVideoGrid() {
-		return this.state.videos.map(video => {
+		return this.props.videos.map(video => {
 			return (
 				<Grid item xs={4}>
 					<video width="100%" height="auto" preload="metadata">
@@ -50,36 +49,8 @@ class VideoGrid extends Component {
 		});
 	}
 
-  handleLoadVideo(event) {
-    const videos = this.state.videos;
-
-    for (const file of event.target.files) {
-      console.log(file)
-      videos.push({
-        id: this.state.videos.length,
-        blob: URL.createObjectURL(file), 
-        file: file,
-        thumbnail: null,
-      });
-    }
-    let thumbnails = this.state.thumbnails;
-    thumbnails.push(null);
-
-    this.setState(state => ({
-      ...state,
-      videos,
-      thumbnails,
-    }));
-    console.log(this.state.videos)
-		 
-  }
-
-  handleNewThumbnail(id, thumbnail) {
-    let videos = this.state.videos;
-    videos[id].thumbnail = thumbnail;
-    this.setState({
-      videos,
-    });
+  handleLoadVideo = (event) => {
+    this.props.onNewVideo(event.target.files);
   }
 
 	render() {

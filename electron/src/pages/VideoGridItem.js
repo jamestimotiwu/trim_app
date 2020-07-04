@@ -23,9 +23,7 @@ class VideoGridItem extends Component {
 		
 		if (ref != null) {
 			this.thVidRef = ref;
-      console.log(this.thVidRef.id)
 			this.thVidRef.addEventListener('loadedmetadata', () => {
-			  console.log(this.thVidRef.videoHeight);
 				this.props.canvasRef.current.height = this.thVidRef.videoHeight/2;
 				this.props.canvasRef.current.width = this.thVidRef.videoWidth/2;
 				this.thVidRef.currentTime = 0.5;
@@ -37,14 +35,12 @@ class VideoGridItem extends Component {
 											this.props.canvasRef.current.height);
 				this.props.canvasRef.current.toBlob((blob) => {
           this.thVidRef.src = "";
-				  console.log(blob);
 
           // Use thumbnail property in video
 					const blob_link = URL.createObjectURL(blob);
           this.setState({
             thumbnail: blob_link,
           });
-          console.log(this.props.video.id);
           this.handleNewThumbnail(this.props.video.id, blob_link);
 
 				}, 'image/jpeg');
