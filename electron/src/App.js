@@ -4,7 +4,7 @@ import './App.css';
 import { channels } from './shared/constants';
 import Trim from './pages/Trim.js';
 import VideoGrid from './pages/VideoGrid.js';
-const { ipcRenderer } = window;
+const { webFrame, ipcRenderer } = window;
 
 class App extends Component {
   constructor(props) {
@@ -19,6 +19,7 @@ class App extends Component {
     this.videoClicked = this.videoClicked.bind(this);
     this.setVideoGrid = this.setVideoGrid.bind(this);
 
+    console.log(webFrame);
     ipcRenderer.send(channels.APP_INFO);
     ipcRenderer.on(channels.APP_INFO, (event, arg) => {
     ipcRenderer.removeAllListeners(channels.APP_INFO);
@@ -27,8 +28,17 @@ class App extends Component {
     });
   }
 
+  toMB(bytes) {
+    return (bytes / (1000.0*1000)).toFixed(2)
+  }
+
+
   videoClicked(video) {
     console.log(video);
+
+    console.log(webFrame.getResourceUsage())
+
+    console.log("wehframe cache cleared");
     this.setState({
       video,
       mode: 'trim',

@@ -179,6 +179,8 @@ class Trim extends Component {
   }
   
   handleCancelTrim(event) {
+    this.videoRef.src='';
+    this.thVidRef.src='';
     this.setState(state => ({
 			...state,
 			thumbnails: [],

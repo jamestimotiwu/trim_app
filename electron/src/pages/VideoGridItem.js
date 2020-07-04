@@ -36,6 +36,7 @@ class VideoGridItem extends Component {
 											this.props.canvasRef.current.width,
 											this.props.canvasRef.current.height);
 				this.props.canvasRef.current.toBlob((blob) => {
+          this.thVidRef.src = "";
 				  console.log(blob);
 
           // Use thumbnail property in video
@@ -59,7 +60,14 @@ class VideoGridItem extends Component {
 	renderVideoThumb() {
 		return this.state.thumbnail === null && ( 
       <div>
-        <video ref={this.thumbVidRef} preload="metadata" width="100%" height="auto" src={this.props.video.blob}></video>
+        <video 
+          ref={this.thumbVidRef} 
+          preload="metadata" 
+          width="100%" 
+          height="auto"
+        >
+          <source src={this.props.video.blob}/>
+        </video>
       </div>
     )
 	}
