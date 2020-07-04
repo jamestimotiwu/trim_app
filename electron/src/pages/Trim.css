@@ -1,0 +1,86 @@
+.uploader-wrapper>* {
+  width: 250px;
+  padding-top: 2em;
+  height: 30px;
+}
+
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -moz-user-drag: none;
+  -ms-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+}
+
+.horizontal-slider {
+  width: 800px;
+  padding: '0px 0';
+  max-width: 800px;
+  height: 45px;
+  border: 1px solid grey;
+}
+
+.example-thumb {
+  top: -2px;
+  height: 48px;
+  font-size: 0.9em;
+  text-align: center;
+  background-color: #fcc603;
+  color: white;
+  cursor: pointer;
+  border: 1px solid #fcc603;
+  border-radius: 10%;
+}
+
+.example-thumb.active {
+  background-color: #fcc603;
+}
+
+.example-track {
+  height: 45px;
+  background: #ddd;
+}
+
+.example-track.example-track-0 {
+  margin-right: 6px;
+  height: 48px;
+  background: #000;
+  opacity: 0.5;
+}
+.example-track.example-track-1 {
+  background: transparent;
+  border: 2px solid #fcc603;
+}
+
+.example-track.example-track-2 {
+  margin-left: 6px;
+  height: 48px;
+  background: #000;
+  opacity: 0.5;
+}
+
+.horizontal-slider .example-track {
+  top: -2px;
+}
+
+.horizontal-slider .example-thumb-0 {
+  margin-left: -5px;
+  width: 12px;
+  height: 47px;
+  color: #000;
+  border-radius: 10%;
+}
+
+.horizontal-slider .example-thumb-1 {
+  margin-left: 5px;
+  width: 12px;
+  height: 47px;
+  color: #000;
+  border-radius: 10%;
+}
+
