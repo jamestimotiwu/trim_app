@@ -11,7 +11,8 @@ class App extends Component {
     super(props);
     this.state = {
       mode: 'videogrid',
-      video: null,
+      videos: [],
+      videoId: null,
       appName: '',
       appVersion: '',
     }
@@ -19,7 +20,6 @@ class App extends Component {
     this.videoClicked = this.videoClicked.bind(this);
     this.setVideoGrid = this.setVideoGrid.bind(this);
 
-    console.log(webFrame);
     ipcRenderer.send(channels.APP_INFO);
     ipcRenderer.on(channels.APP_INFO, (event, arg) => {
     ipcRenderer.removeAllListeners(channels.APP_INFO);
@@ -28,21 +28,48 @@ class App extends Component {
     });
   }
 
-  toMB(bytes) {
-    return (bytes / (1000.0*1000)).toFixed(2)
-  }
-
-
-  videoClicked(video) {
-    console.log(video);
-
-    console.log(webFrame.getResourceUsage())
-
-    console.log("wehframe cache cleared");
+  videoClicked(id) {
+    const videoId = id;
     this.setState({
-      video,
+      videoId,
       mode: 'trim',
     });
+  }
+
+  setThumbnail(id, thumbnail) {
+    let videos = this.state.videos;
+    videos[id].thumbnail = thumbnail;
+    this.setState({
+      videos,
+    });
+  }
+
+  setVideo(id, video) {
+    let videos = this.state.videos;
+    // Refresh thumbnail
+    videos[id] = video;
+    videos[id].thumbnail = null;
+    this.setState({
+      videos,
+    });
+  }
+
+  addVideos(videoFiles) {
+    const videos = this.state.videos;
+
+    for (const file of videoFiles) {
+      videos.push({
+        id: this.state.videos.length,
+        blob: URL.createObjectURL(file), 
+        file: file,
+        thumbnail: null,
+      });
+    }
+    
+    this.setState(state => ({
+      ...state,
+      videos,
+    }));
   }
 
   setVideoGrid(event) {
@@ -57,13 +84,18 @@ class App extends Component {
         <div className="container">
           {this.state.mode === 'videogrid' && (
             <VideoGrid
-              onImageClick={(video) => this.videoClicked(video)}>
+              videos={this.state.videos}
+              onImageClick={(video) => this.videoClicked(video)}
+              onNewVideo={(videoFiles) => this.addVideos(videoFiles)}
+              onSetThumbnail={(id, thumbnail) => this.setThumbnail(id, thumbnail)}
+            >
             </VideoGrid>
           )}
           {this.state.mode === 'trim' && (
             <Trim
-              video={this.state.video}
+              video={this.state.videos[this.state.videoId]}
               onCancel={(e) => this.setVideoGrid(e)}
+              onSetVideo={(id, video) => this.setVideo(id, video)}
             ></Trim>
           )}
         </div>
