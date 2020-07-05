@@ -54,7 +54,7 @@ class VideoGridItem extends Component {
   }
 
 	renderVideoThumb() {
-		return this.state.thumbnail === null && ( 
+		return this.props.video.thumbnail === null && ( 
       <div>
         <video 
           ref={this.thumbVidRef} 
