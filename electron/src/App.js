@@ -36,6 +36,14 @@ class App extends Component {
     });
   }
 
+  setStrip(id, strip) {
+    let videos = this.state.videos;
+    videos[id].strip = strip;
+    this.setState({
+      videos,
+    });
+  }
+
   setThumbnail(id, thumbnail) {
     let videos = this.state.videos;
     videos[id].thumbnail = thumbnail;
@@ -64,6 +72,7 @@ class App extends Component {
         blob: URL.createObjectURL(file), 
         file: file,
         thumbnail: null,
+        strip: [],
       });
     }
     
@@ -110,6 +119,7 @@ class App extends Component {
               onCancel={(e) => this.setVideoGrid(e)}
               onSetVideo={(id, video) => this.setVideo(id, video)}
               onChangeVideo={(id, offset) => this.changeVideo(id, offset)}
+              onSetStrip={(id, strip) => this.setStrip(id, strip)}
             ></Trim>
           )}
         </div>

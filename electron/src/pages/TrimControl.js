@@ -9,9 +9,15 @@ const { ipcRenderer } = window;
 class TrimControl extends Component {
   constructor(props) {
     super(props);
+  
+    let thumbnails = []
+    console.log(this.props.strip.length);
+    if (this.props.strip.length >= 9) {
+      thumbnails = this.props.strip;
+    }
 
     this.state = {
-      thumbnails: [],
+      thumbnails,
       sliderValue: [0, 100],
       sliderSet: false,
     }
@@ -23,6 +29,7 @@ class TrimControl extends Component {
     this.handleCancelTrim = this.handleCancelTrim.bind(this);
     this.handleTrim = this.handleTrim.bind(this);
   }
+
 
   trimFFmpeg() {
     ipcRenderer.send(channels.FFMPEG_TRIM, {
@@ -90,6 +97,10 @@ class TrimControl extends Component {
         if (curr_time <= this.thVidRef.duration) {
           this.thVidRef.currentTime = curr_time;
         }
+
+        if (thumbnails.length >= 9) {
+          this.props.onSetStrip(thumbnails);
+        }
       });
     }
   }
@@ -143,7 +154,7 @@ class TrimControl extends Component {
         </Grid>
         <Grid item style={{ position: "relative" }} xs={9}>
           <div style={{ overflow: "hidden", height: "100%", width: 1000, position: "absolute", top: 9, left: 10 }}>
-            {this.renderNewThumbnails()}
+            {(this.props.strip.length <= 9) && this.renderNewThumbnails()}
             {this.renderThumbnails()}
           </div>
           <ReactSlider

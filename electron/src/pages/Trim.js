@@ -8,10 +8,12 @@ const { ipcRenderer } = window;
 class Trim extends Component {
   constructor(props) {
     super(props);
+    const { video } = this.props;
+    const path = video.path;
 
     this.state = {
-      video: null,
-      path: '',
+      video,
+      path,
       playbackRate: 1,
       status: 'pending'
     };
@@ -53,18 +55,6 @@ class Trim extends Component {
     }
   }
 
-  componentWillMount() {
-    if (this.state.video === null) {
-      const { video } = this.props;
-      const path = video.path
-
-      this.setState(state => ({
-        ...state,
-        video,
-        path,
-      }))
-    }
-  }
 
   handleCancel(event) {
     this.videoRef.src = '';
@@ -83,6 +73,7 @@ class Trim extends Component {
       blob: blob,
       file: new File([blob], "filename.mov", { type: 'video/quicktime' }),
       thumbnail: this.state.video.thumbnail,
+      strip: [],
     };
 
     this.props.onSetVideo(this.state.video.id, video);
@@ -129,10 +120,12 @@ class Trim extends Component {
             (<TrimControl
               path={this.state.video.path}
               blob={this.state.video.blob}
+              strip={this.state.video.strip}
               duration={this.videoRef.duration}
               onCancel={() => this.handleCancel()}
               onChange={(val) => {this.videoRef.currentTime = val}}
               onSetVideo={(path, blob) => this.setVideo(path, blob)}
+              onSetStrip={(strip) => this.props.onSetStrip(this.state.video.id, strip)}
               videoRef={this.videoRef}
             ></TrimControl>
             )
