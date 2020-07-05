@@ -116,20 +116,17 @@ class Trim extends Component {
               {this.renderVideo()}
             </div>
           </Grid>
-          {(this.state.status === 'loaded') && 
-            (<TrimControl
-              path={this.state.video.path}
-              blob={this.state.video.blob}
-              strip={this.state.video.strip}
-              duration={this.videoRef.duration}
-              onCancel={() => this.handleCancel()}
-              onChange={(val) => {this.videoRef.currentTime = val}}
-              onSetVideo={(path, blob) => this.setVideo(path, blob)}
-              onSetStrip={(strip) => this.props.onSetStrip(this.state.video.id, strip)}
-              videoRef={this.videoRef}
-            ></TrimControl>
-            )
-          }
+          <TrimControl
+            path={this.state.video.path}
+            blob={this.state.video.blob}
+            strip={this.state.video.strip}
+            duration={(this.state.status === 'loaded') && this.videoRef.duration}
+            onCancel={() => this.handleCancel()}
+            onChange={(val) => {this.videoRef.currentTime = val}}
+            onSetVideo={(path, blob) => this.setVideo(path, blob)}
+            onSetStrip={(strip) => this.props.onSetStrip(this.state.video.id, strip)}
+            videoRef={this.videoRef}
+          ></TrimControl>
         </Grid>
       </div>
     )

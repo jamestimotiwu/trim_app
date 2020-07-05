@@ -11,7 +11,6 @@ class TrimControl extends Component {
     super(props);
   
     let thumbnails = []
-    console.log(this.props.strip.length);
     if (this.props.strip.length >= 9) {
       thumbnails = this.props.strip;
     }
@@ -66,18 +65,19 @@ class TrimControl extends Component {
     var ctx = this.canvasRef.current.getContext('2d');
     this.canvasRef.current.height = 45;
     this.canvasRef.current.width = 80;
-    let seek_skip = this.props.duration / 9;
     let curr_time = 0;
     let thumbnails = [];
 
     if (ref != null) {
       this.thVidRef = ref;
+      let interval = this.thVidRef.duration / 9;
+      
       this.thVidRef.currentTime = 0.1;
       this.thVidRef.addEventListener('seeked', () => {
         ctx.drawImage(this.thVidRef, 0, 0, 80, 45);
 
-        if (isNaN(seek_skip)) {
-          seek_skip = this.props.duration / 9;
+        if (isNaN(interval)) {
+          interval = this.thVidRef.duration / 9;
         }
 
         // Null check canvasref again
@@ -93,7 +93,7 @@ class TrimControl extends Component {
           });
         }, 'image/jpeg');
 
-        curr_time = curr_time + seek_skip;
+        curr_time += interval;
         if (curr_time <= this.thVidRef.duration) {
           this.thVidRef.currentTime = curr_time;
         }
@@ -145,7 +145,7 @@ class TrimControl extends Component {
   
   render() {
     return (
-      <Grid container key={this.state.sliderSet} alignItems="center" justify="center" spacing={2}>
+      <Grid container alignItems="center" justify="center" spacing={2}>
         <canvas style={{ display: "none" }} ref={this.canvasRef} />
         <Grid item xs>
           <IconButton onClick={() => { this.props.videoRef.play() }}>
@@ -153,7 +153,7 @@ class TrimControl extends Component {
           </IconButton>
         </Grid>
         <Grid item style={{ position: "relative" }} xs={9}>
-          <div style={{ overflow: "hidden", height: "100%", width: 1000, position: "absolute", top: 9, left: 10 }}>
+          <div key={this.state.sliderSet} style={{ overflow: "hidden", height: "100%", width: 1000, position: "absolute", top: 9, left: 10 }}>
             {(this.props.strip.length <= 9) && this.renderNewThumbnails()}
             {this.renderThumbnails()}
           </div>
