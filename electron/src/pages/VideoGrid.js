@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
-import { Button, Grid} from '@material-ui/core';
+import { Button, Grid } from '@material-ui/core';
 import './Trim.css'
 import VideoGridItem from './VideoGridItem';
 
 class VideoGrid extends Component {
-    constructor(props) {
-    super(props); 
+	constructor(props) {
+		super(props);
 
 		this.state = {
-      thumbnails: [],
+			thumbnails: [],
 		}
 		this.canvasRef = React.createRef();
 		this.thVidRef = null
@@ -16,63 +16,63 @@ class VideoGrid extends Component {
 		this.handleLoadVideo = this.handleLoadVideo.bind(this);
 		this.handleImageClick = this.handleImageClick.bind(this);
 	}
-  
 
-  handleImageClick = (i) => {
-    this.props.onImageClick(i)
-  }
 
-  renderImageGrid() {
-    return this.props.videos.map(video => {
-      return (
-        <Grid item xs={4}>
-          <VideoGridItem
-            video={video}
-            onNewThumbnail={(id, thumbnail) => this.props.onSetThumbnail(id, thumbnail)}
-            canvasRef={this.canvasRef}
-            onImageClick={(i) => this.props.onImageClick(i)}
-          />
-        </Grid>
-      )
-    });
-  }
+	handleImageClick = (i) => {
+		this.props.onImageClick(i)
+	}
+
+	renderImageGrid() {
+		return this.props.videos.map(video => {
+			return (
+				<Grid item xs={4}>
+					<VideoGridItem
+						video={video}
+						onNewThumbnail={(id, thumbnail) => this.props.onSetThumbnail(id, thumbnail)}
+						canvasRef={this.canvasRef}
+						onImageClick={(i) => this.props.onImageClick(i)}
+					/>
+				</Grid>
+			)
+		});
+	}
 
 	renderVideoGrid() {
 		return this.props.videos.map(video => {
 			return (
 				<Grid item xs={4}>
 					<video width="100%" height="auto" preload="metadata">
-						<source src={video.blob}/>
+						<source src={video.blob} />
 					</video>
 				</Grid>
 			);
 		});
 	}
 
-  handleLoadVideo = (event) => {
-    this.props.onNewVideo(event.target.files);
-  }
+	handleLoadVideo = (event) => {
+		this.props.onNewVideo(event.target.files);
+	}
 
 	render() {
-		return(
-      <div>
-        <Grid container alignItems="center" justify="center" spacing={1}>
-					<canvas style={{display: "none"}} ref={this.canvasRef}/>
+		return (
+			<div>
+				<Grid container alignItems="center" justify="center" spacing={1}>
+					<canvas style={{ display: "none" }} ref={this.canvasRef} />
 					<Grid item xs={12}>
-						<div style={{margin:"0 auto",paddingTop: "10em"}} id="file-load">
+						<div style={{ margin: "0 auto", paddingTop: "10em" }} id="file-load">
 							<label htmlFor="upload-video">
-								<Button variant="contained" 
-										component="span"
-										color="default"
-										style={{textTransform:"None"}}
-										>
+								<Button variant="contained"
+									component="span"
+									color="default"
+									style={{ textTransform: "None" }}
+								>
 									Load
 								</Button>
 							</label>
 							<input
-                multiple
+								multiple
 								accept="video/*"
-								style={{display: "None"}}
+								style={{ display: "None" }}
 								id="upload-video"
 								type="file"
 								onChange={this.handleLoadVideo}
@@ -84,7 +84,7 @@ class VideoGrid extends Component {
 				</Grid>
 			</div>
 		);
-	}
+  }
 }
 
 export default VideoGrid;
