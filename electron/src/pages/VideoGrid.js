@@ -7,9 +7,6 @@ class VideoGrid extends Component {
 	constructor(props) {
 		super(props);
 
-		this.state = {
-			thumbnails: [],
-		}
 		this.canvasRef = React.createRef();
 		this.thVidRef = null
 
@@ -59,7 +56,7 @@ class VideoGrid extends Component {
 				<Grid container alignItems="center" justify="center" spacing={1}>
 					<canvas style={{ display: "none" }} ref={this.canvasRef} />
 					<Grid item xs={12}>
-						<div style={{ margin: "0 auto", paddingTop: "10em" }} id="file-load">
+						<div style={{ margin: "0 auto" }} id="file-load">
 							<label htmlFor="upload-video">
 								<Button variant="contained"
 									component="span"

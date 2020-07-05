@@ -60,6 +60,7 @@ class App extends Component {
     for (const file of videoFiles) {
       videos.push({
         id: this.state.videos.length,
+        path: file.path,
         blob: URL.createObjectURL(file), 
         file: file,
         thumbnail: null,
@@ -70,6 +71,17 @@ class App extends Component {
       ...state,
       videos,
     }));
+  }
+
+  changeVideo(id, offset) {
+    const newId = id + offset;
+    // Is offset within video array bounds
+    if ((this.state.videos.length > newId) && (newId >= 0)) {
+      this.setState({
+        videoId: newId,
+      });
+      console.log(this.state.videoId);
+    }
   }
 
   setVideoGrid(event) {
@@ -93,9 +105,11 @@ class App extends Component {
           )}
           {this.state.mode === 'trim' && (
             <Trim
+              key={this.state.videoId}
               video={this.state.videos[this.state.videoId]}
               onCancel={(e) => this.setVideoGrid(e)}
               onSetVideo={(id, video) => this.setVideo(id, video)}
+              onChangeVideo={(id, offset) => this.changeVideo(id, offset)}
             ></Trim>
           )}
         </div>
