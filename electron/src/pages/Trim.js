@@ -15,6 +15,7 @@ class Trim extends Component {
       video,
       path,
       playbackRate: 1,
+      playing: false,
       status: 'pending'
     };
 
@@ -38,21 +39,32 @@ class Trim extends Component {
 
   handleOnKeyDown = (e) => {
     if (this.videoRef) {
-      switch (e.key) {
-        case 'l':
+      switch (e.code) {
+        case 'KeyL':
           this.videoRef.playbackRate += 0.25;
           break;
-        case 'j':
-          this.videoRef.playbackRate -= 0.25;
+        case 'KeyJ':
+          if (this.videoRef.playbackRate >= 0.25)
+            this.videoRef.playbackRate -= 0.25;
           break;
-        case 'a':
+        case 'KeyA':
           this.props.onChangeVideo(this.state.video.id, -1)
           break;
-        case 'd':
+        case 'KeyD':
           this.props.onChangeVideo(this.state.video.id, 1)
+          break;
+        case ('Space' || 'KeyK'):
+          if (!this.state.playing) {
+            this.videoRef.play();
+          }
+          else {
+            this.videoRef.pause();
+          }
+          this.setState({playing: !this.state.playing})
           break;
       }
     }
+    console.log(e)
   }
 
 

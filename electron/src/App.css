@@ -11,6 +11,10 @@
   }
 }
 
+::-webkit-scrollbar {
+  display: none;
+}
+
 /* Smartphones */
 @media (max-device-width: 480px) {
   .container {
